@@ -9,12 +9,12 @@ JSON, grades, budgets) works on the records adapters return.
 Do this before writing code. Every adapter so far turned up something the original plan got
 wrong or missed:
 
-| Agent | What the docs changed |
-| --- | --- |
+| Agent       | What the docs changed                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Claude Code | `.claude/rules/`, an `AGENTS.md` fallback, 4-hop import limit, HTML comments stripped, skills synced from claude.ai, MCP tool search (tool schemas are deferred by default) |
-| Codex | `AGENTS.override.md`, one file per directory, a shared 32 KiB byte budget, fallback file names, `[[skills.config]]` to turn skills off |
-| Cursor | `.mdc` only (plain `.md` in `.cursor/rules` is ignored), four apply modes, `.cursorrules` no longer documented |
-| Gemini CLI | configurable file names, a `.git` boundary for the parent walk, skills (including the shared `~/.agents/skills`), `url` means SSE and `httpUrl` means HTTP |
+| Codex       | `AGENTS.override.md`, one file per directory, a shared 32 KiB byte budget, fallback file names, `[[skills.config]]` to turn skills off                                      |
+| Cursor      | `.mdc` only (plain `.md` in `.cursor/rules` is ignored), four apply modes, `.cursorrules` no longer documented                                                              |
+| Gemini CLI  | configurable file names, a `.git` boundary for the parent walk, skills (including the shared `~/.agents/skills`), `url` means SSE and `httpUrl` means HTTP                  |
 
 Write what you verified, and the date, in a comment at the top of the adapter file. List what
 you deliberately do not count yet. If you cannot verify something, say so in that comment, set
@@ -27,25 +27,26 @@ Create `src/adapters/<agent>.ts` exporting an `Adapter`, and add it to `src/adap
 
 ```ts
 export const myAgent: Adapter = {
-  id: "my-agent",        // used by --agent
-  label: "My Agent",     // shown on the receipt
+  id: "my-agent", // used by --agent
+  label: "My Agent", // shown on the receipt
   verified: true,
-  scan(ctx) {            // ctx: { project, home, includeUser }
-    return [];           // Item[]
+  scan(ctx) {
+    // ctx: { project, home, includeUser }
+    return []; // Item[]
   },
 };
 ```
 
 Each `Item` is one line on the receipt:
 
-| Field | Meaning |
-| --- | --- |
-| `kind` | `rules`, `skill`, `mcp-server`, or `mcp-tool` |
+| Field     | Meaning                                                                                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`    | `rules`, `skill`, `mcp-server`, or `mcp-tool`                                                                                                               |
 | `loading` | `always` (in context from the first prompt), `on-demand` (only when used), or `unmeasured` (we know it loads but cannot count it without running something) |
-| `scope` | `user` for anything under the home directory, `project` otherwise |
-| `name` | what the receipt prints; use `displayPath(path, ctx)` for files |
-| `tokens` | `estimateTokens(text)` of exactly the text the agent loads, or `null` |
-| `detail` | optional short note (`description`, `cut at byte cap`, a transport). Never a config value |
+| `scope`   | `user` for anything under the home directory, `project` otherwise                                                                                           |
+| `name`    | what the receipt prints; use `displayPath(path, ctx)` for files                                                                                             |
+| `tokens`  | `estimateTokens(text)` of exactly the text the agent loads, or `null`                                                                                       |
+| `detail`  | optional short note (`description`, `cut at byte cap`, a transport). Never a config value                                                                   |
 
 Use the shared helpers instead of writing new ones:
 
