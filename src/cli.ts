@@ -1,10 +1,10 @@
-import { statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
 import { adapters } from "./adapters/index.js";
+import { isDir } from "./fs.js";
 import { renderReceipt } from "./render/receipt.js";
 import { scan } from "./scan.js";
 import type { Item } from "./types.js";
@@ -52,14 +52,6 @@ const program = new Command()
 function fail(code: number, msg: string): never {
   console.error(`ctx-receipt: ${msg}`);
   process.exit(code);
-}
-
-function isDir(path: string): boolean {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 program.parse();

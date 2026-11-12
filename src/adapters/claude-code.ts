@@ -1,37 +1,56 @@
-// Claude Code instruction files.
+// Claude Code.
 // Verified 2026-11-12 against https://code.claude.com/docs/en/memory
+// and https://code.claude.com/docs/en/skills
 //
-// Loaded at launch ("always"):
+// Rules, loaded at launch ("always"):
 //   ~/.claude/CLAUDE.md, ~/.claude/rules/**/*.md
 //   CLAUDE.md, .claude/CLAUDE.md, CLAUDE.local.md in the project dir and every dir above it
 //   .claude/rules/**/*.md in the project
 //   AGENTS.md, .claude/AGENTS.md (project dir and above) only when none of the CLAUDE.md files
 //   above exist there (the default "Project instructions" setting)
 //   @path imports in any of these, up to 4 hops, skipping code spans and fenced blocks
-// Loaded on demand: rules with `paths:` frontmatter.
-// Not counted yet: managed policy CLAUDE.md, auto memory (MEMORY.md), subdirectory CLAUDE.md.
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+//   Rules with `paths:` frontmatter load on demand instead.
+//
+// Skills: the listing (name + description + when_to_use, capped at 1,536 chars) is always
+// loaded unless `disable-model-invocation` is set; the body loads on demand. Locations:
+//   ~/.claude/skills/<name>/SKILL.md, ~/.claude/skills/synced/<account>/<name>/SKILL.md
+//   .claude/skills/<name>/SKILL.md from the project dir up to the git repository root
+//   .claude/commands/**/*.md and ~/.claude/commands/**/*.md (older format, same frontmatter)
+//
+// Not counted yet: managed policy files, auto memory (MEMORY.md), subdirectory CLAUDE.md and
+// skills, plugin skills, bundled skills, and the listing's overall budget (1% of the window),
+// which can drop descriptions when there are many skills.
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, resolve, sep } from "node:path";
 import matter from "gray-matter";
+import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
+import { findSkills, readSkill, type Skill, skillItems, str, truthy } from "../skills.js";
 import { estimateTokens } from "../tokens.js";
-import type { Adapter, Item, Loading, ScanContext, Scope } from "../types.js";
+import type { Adapter, Item, Loading, Scope } from "../types.js";
 
+const AGENT = "claude-code";
 const MAX_IMPORT_HOPS = 4;
+const MAX_LISTING_CHARS = 1536;
 const FENCE = /^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[^\n]*$|(?![\s\S]))/gm;
 
 export const claudeCode: Adapter = {
-  id: "claude-code",
+  id: AGENT,
   label: "Claude Code",
   verified: true,
   scan(ctx) {
     const items: Item[] = [];
     const seen = new Set<string>();
+    const once = (path: string) => {
+      const key = realPath(path);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    };
 
     const load = (path: string, scope: Scope, loading: Loading, body: string, hops: number) => {
-      seen.add(path);
       const text = stripHtmlComments(body);
       items.push({
-        agent: "claude-code",
+        agent: AGENT,
         kind: "rules",
         name: (hops > 0 ? "@" : "") + displayPath(path, ctx),
         path,
@@ -41,24 +60,51 @@ export const claudeCode: Adapter = {
       });
       if (hops >= MAX_IMPORT_HOPS) return;
       for (const target of findImports(text, dirname(path), ctx.home)) {
-        if (!seen.has(target)) load(target, scope, loading, readFileSync(target, "utf8"), hops + 1);
+        if (once(target)) load(target, scope, loading, readFileSync(target, "utf8"), hops + 1);
       }
     };
     const loadFile = (path: string, scope: Scope) => {
-      if (!seen.has(path)) load(path, scope, "always", readFileSync(path, "utf8"), 0);
+      if (once(path)) load(path, scope, "always", readFileSync(path, "utf8"), 0);
     };
     const loadRules = (dir: string, scope: Scope) => {
       for (const path of listMarkdown(dir)) {
-        if (seen.has(path)) continue;
+        if (!once(path)) continue;
         const { body, scoped } = parseRule(readFileSync(path, "utf8"));
         load(path, scope, scoped ? "on-demand" : "always", body, 0);
       }
     };
+    const addSkill = (skill: Skill, scope: Scope) => {
+      if (once(skill.path)) items.push(...skillItems(AGENT, skill, listing(skill), scope));
+    };
+    const loadSkills = (root: string, scope: Scope) => {
+      for (const path of findSkills(root)) {
+        const folder = path.split(sep).at(-2) ?? "";
+        if (folder.startsWith(".") || /^(synced|anthropic-skills)/i.test(folder)) continue;
+        addSkill(readSkill(path), scope);
+      }
+    };
+    const loadCommands = (dir: string, scope: Scope) => {
+      for (const path of listMarkdown(dir)) {
+        // Commands take their name from the file path; the `name` field is not supported.
+        const name = path
+          .slice(dir.length + 1, -3)
+          .split(sep)
+          .join(":");
+        addSkill({ ...readSkill(path), name }, scope);
+      }
+    };
 
     if (ctx.includeUser) {
-      const userFile = join(ctx.home, ".claude", "CLAUDE.md");
-      if (isFile(userFile)) loadFile(userFile, "user");
-      loadRules(join(ctx.home, ".claude", "rules"), "user");
+      const dot = join(ctx.home, ".claude");
+      if (isFile(join(dot, "CLAUDE.md"))) loadFile(join(dot, "CLAUDE.md"), "user");
+      loadRules(join(dot, "rules"), "user");
+      loadSkills(join(dot, "skills"), "user");
+      for (const account of subdirs(join(dot, "skills", "synced"))) {
+        for (const path of findSkills(join(dot, "skills", "synced", account))) {
+          addSkill(readSkill(path), "user");
+        }
+      }
+      loadCommands(join(dot, "commands"), "user");
     }
 
     const dirs = ancestors(ctx.project);
@@ -69,16 +115,18 @@ export const claudeCode: Adapter = {
       claudeFiles.length > 0 ? claudeFiles : pick(["AGENTS.md", join(".claude", "AGENTS.md")]);
     for (const f of files) loadFile(f, "project");
     loadRules(join(ctx.project, ".claude", "rules"), "project");
+    for (const d of repoDirs(ctx.project)) loadSkills(join(d, ".claude", "skills"), "project");
+    loadCommands(join(ctx.project, ".claude", "commands"), "project");
 
     return items;
   },
 };
 
-/** Root first, project last: the order Claude Code concatenates them in. */
-function ancestors(dir: string): string[] {
-  const out = [dir];
-  while (dirname(out[0]) !== out[0]) out.unshift(dirname(out[0]));
-  return out;
+/** The line Claude Code puts in its skill listing, or null when the model never sees it. */
+function listing(skill: Skill): string | null {
+  if (truthy(skill.data["disable-model-invocation"])) return null;
+  const text = [skill.description, str(skill.data.when_to_use)].filter(Boolean).join(" ");
+  return `- ${skill.name}: ${text.slice(0, MAX_LISTING_CHARS)}`;
 }
 
 function parseRule(raw: string): { body: string; scoped: boolean } {
@@ -135,25 +183,4 @@ function listMarkdown(dir: string): string[] {
     .map((e) => join(dir, e))
     .filter(isFile)
     .sort();
-}
-
-function isFile(path: string): boolean {
-  try {
-    return statSync(path).isFile();
-  } catch {
-    return false;
-  }
-}
-
-/** Project-relative, ~/ for home, otherwise relative to the project (../CLAUDE.md). */
-export function displayPath(path: string, ctx: ScanContext): string {
-  const inside = (base: string) => {
-    const rel = relative(base, path);
-    return rel && !rel.startsWith("..") && !isAbsolute(rel) ? rel.split(sep).join("/") : null;
-  };
-  const inProject = inside(ctx.project);
-  if (inProject) return inProject;
-  const inHome = inside(ctx.home);
-  if (inHome) return `~/${inHome}`;
-  return relative(ctx.project, path).split(sep).join("/");
 }

@@ -14,7 +14,9 @@ function run(ctx: ScanContext) {
 
 describe("claude-code adapter", () => {
   test("finds user and project files, imports, and rules", () => {
-    const items = run({ project: join(root, "project"), home, includeUser: true });
+    const items = run({ project: join(root, "project"), home, includeUser: true }).filter(
+      (i) => i.kind === "rules",
+    );
     const byName = Object.fromEntries(items.map((i) => [i.name, i]));
 
     expect(Object.keys(byName).sort()).toEqual(

@@ -25,7 +25,7 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
     const mine = always.filter((i) => i.agent === id);
     const subtotal = sum(mine);
     lines.push(c.bold(labelOf(id).toUpperCase()));
-    for (const i of mine) lines.push(row(`  ${i.name}`, fmt(i.tokens)));
+    for (const i of mine) lines.push(row(`  ${label(i)}`, fmt(i.tokens)));
     if (mine.length === 0) lines.push(c.dim("  (nothing always loaded)"));
     lines.push(row("", "-".repeat(10)));
     lines.push(c.bold(row("  SUBTOTAL", fmt(subtotal))));
@@ -37,7 +37,12 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
   if (onDemand.length > 0) {
     rule("-");
     lines.push(c.bold("ON DEMAND") + c.dim(" (only when used; not in total)"));
-    for (const i of onDemand) lines.push(row(`  ${i.name}`, fmt(i.tokens)));
+    for (const id of agentIds) {
+      const mine = onDemand.filter((i) => i.agent === id);
+      if (mine.length === 0) continue;
+      lines.push(`  ${labelOf(id)}`);
+      for (const i of mine) lines.push(row(`    ${label(i)}`, fmt(i.tokens)));
+    }
   }
 
   rule("-");
@@ -66,4 +71,8 @@ function row(left: string, right: string): string {
   const room = WIDTH - right.length - 1;
   const l = left.length > room ? `  …${left.slice(left.length - room + 3)}` : left;
   return l + " ".repeat(WIDTH - l.length - right.length) + right;
+}
+
+function label(i: Item): string {
+  return i.kind === "skill" ? `skill ${i.name}` : i.name;
 }
