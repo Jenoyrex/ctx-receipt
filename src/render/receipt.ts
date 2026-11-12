@@ -1,0 +1,69 @@
+import { createColors } from "picocolors";
+import { adapters } from "../adapters/index.js";
+import { TOKENIZER } from "../tokens.js";
+import type { Item } from "../types.js";
+
+const WIDTH = 52;
+const WINDOW = 200_000;
+
+export function renderReceipt(items: Item[], opts: { color: boolean }): string {
+  const c = createColors(opts.color);
+  const lines: string[] = [];
+  const rule = (ch: string) => lines.push(c.dim(ch.repeat(WIDTH)));
+  const center = (s: string) => " ".repeat(Math.floor((WIDTH - s.length) / 2)) + s;
+
+  rule("=");
+  lines.push(c.bold(center("CTX-RECEIPT")));
+  lines.push(center("loaded before your first prompt"));
+  rule("=");
+
+  const always = items.filter((i) => i.loading === "always");
+  const agentIds = [...new Set(items.map((i) => i.agent))];
+  if (agentIds.length === 0) lines.push("Nothing found.", "");
+
+  for (const id of agentIds) {
+    const mine = always.filter((i) => i.agent === id);
+    const subtotal = sum(mine);
+    lines.push(c.bold(labelOf(id).toUpperCase()));
+    for (const i of mine) lines.push(row(`  ${i.name}`, fmt(i.tokens)));
+    if (mine.length === 0) lines.push(c.dim("  (nothing always loaded)"));
+    lines.push(row("", "-".repeat(10)));
+    lines.push(c.bold(row("  SUBTOTAL", fmt(subtotal))));
+    lines.push(c.dim(`  ${((subtotal / WINDOW) * 100).toFixed(1)}% of a 200k window`));
+    lines.push("");
+  }
+
+  const onDemand = items.filter((i) => i.loading === "on-demand");
+  if (onDemand.length > 0) {
+    rule("-");
+    lines.push(c.bold("ON DEMAND") + c.dim(" (only when used; not in total)"));
+    for (const i of onDemand) lines.push(row(`  ${i.name}`, fmt(i.tokens)));
+  }
+
+  rule("-");
+  lines.push(c.bold(row("TOTAL ALWAYS LOADED", fmt(sum(always)))));
+  rule("=");
+  lines.push(c.dim("All token counts are ESTIMATES."));
+  lines.push(c.dim(`Tokenizer: ${TOKENIZER}.`));
+  lines.push(c.dim("Each agent's own tokenizer will differ."));
+  return `${lines.join("\n")}\n`;
+}
+
+function labelOf(id: string): string {
+  return adapters.find((a) => a.id === id)?.label ?? id;
+}
+
+function sum(items: Item[]): number {
+  return items.reduce((n, i) => n + (i.tokens ?? 0), 0);
+}
+
+function fmt(n: number | null): string {
+  return n === null ? "?" : n.toLocaleString("en-US");
+}
+
+/** Left text and right-aligned number on one line; long names are cut from the left. */
+function row(left: string, right: string): string {
+  const room = WIDTH - right.length - 1;
+  const l = left.length > room ? `  …${left.slice(left.length - room + 3)}` : left;
+  return l + " ".repeat(WIDTH - l.length - right.length) + right;
+}
