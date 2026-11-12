@@ -17,13 +17,22 @@
 //   .claude/skills/<name>/SKILL.md from the project dir up to the git repository root
 //   .claude/commands/**/*.md and ~/.claude/commands/**/*.md (older format, same frontmatter)
 //
+// MCP servers (verified against https://code.claude.com/docs/en/mcp), listed "unmeasured":
+//   local scope:   ~/.claude.json  projects["<project path>"].mcpServers
+//   project scope: .mcp.json in the project root
+//   user scope:    ~/.claude.json  mcpServers
+//   The same name in several scopes connects once (local > project > user). Servers in the
+//   project entry's disabledMcpServers and reserved built-in names are skipped.
+//
 // Not counted yet: managed policy files, auto memory (MEMORY.md), subdirectory CLAUDE.md and
 // skills, plugin skills, bundled skills, and the listing's overall budget (1% of the window),
-// which can drop descriptions when there are many skills.
+// which can drop descriptions when there are many skills. MCP from plugins, claude.ai
+// connectors, managed-mcp.json, and .mcp.json approvals (disabledMcpjsonServers etc.).
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import matter from "gray-matter";
 import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
+import { isObject, type McpServer, readJsonConfig, safeServers } from "../redact.js";
 import { findSkills, readSkill, type Skill, skillItems, str, truthy } from "../skills.js";
 import { estimateTokens } from "../tokens.js";
 import type { Adapter, Item, Loading, Scope } from "../types.js";
@@ -118,9 +127,58 @@ export const claudeCode: Adapter = {
     for (const d of repoDirs(ctx.project)) loadSkills(join(d, ".claude", "skills"), "project");
     loadCommands(join(ctx.project, ".claude", "commands"), "project");
 
+    // MCP servers, in precedence order so the first definition of a name wins.
+    const servers = new Map<string, Item>();
+    const addServers = (list: McpServer[], path: string, scope: Scope) => {
+      for (const s of list) {
+        if (servers.has(s.name) || RESERVED_MCP_NAMES.has(s.name)) continue;
+        servers.set(s.name, {
+          agent: AGENT,
+          kind: "mcp-server",
+          name: s.name,
+          path,
+          scope,
+          loading: "unmeasured",
+          tokens: null,
+          detail: s.transport,
+        });
+      }
+    };
+    const userConfigPath = join(ctx.home, ".claude.json");
+    const userConfig = ctx.includeUser ? readJsonConfig(userConfigPath) : null;
+    const entry = isObject(userConfig) ? projectEntry(userConfig.projects, ctx.project) : {};
+    addServers(safeServers(entry.mcpServers), userConfigPath, "user");
+    const mcpJsonPath = join(ctx.project, ".mcp.json");
+    const mcpJson = readJsonConfig(mcpJsonPath);
+    addServers(safeServers(isObject(mcpJson) ? mcpJson.mcpServers : null), mcpJsonPath, "project");
+    if (isObject(userConfig))
+      addServers(safeServers(userConfig.mcpServers), userConfigPath, "user");
+    const disabled = Array.isArray(entry.disabledMcpServers) ? entry.disabledMcpServers : [];
+    for (const item of servers.values()) if (!disabled.includes(item.name)) items.push(item);
+
     return items;
   },
 };
+
+const RESERVED_MCP_NAMES = new Set([
+  "workspace",
+  "claude-in-chrome",
+  "computer-use",
+  "Claude Preview",
+  "Claude Browser",
+]);
+
+/** The ~/.claude.json entry for this project. Keys are paths; on Windows they use "/". */
+function projectEntry(projects: unknown, project: string): Record<string, unknown> {
+  if (!isObject(projects)) return {};
+  const norm = (p: string) => {
+    const r = resolve(p).replace(/\\/g, "/");
+    return process.platform === "win32" ? r.toLowerCase() : r;
+  };
+  const key = Object.keys(projects).find((k) => norm(k) === norm(project));
+  const entry = key ? projects[key] : null;
+  return isObject(entry) ? entry : {};
+}
 
 /** The line Claude Code puts in its skill listing, or null when the model never sees it. */
 function listing(skill: Skill): string | null {

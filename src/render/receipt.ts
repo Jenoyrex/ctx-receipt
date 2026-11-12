@@ -25,11 +25,14 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
     const mine = always.filter((i) => i.agent === id);
     const subtotal = sum(mine);
     lines.push(c.bold(labelOf(id).toUpperCase()));
+    const unmeasured = items.filter((i) => i.agent === id && i.loading === "unmeasured");
     for (const i of mine) lines.push(row(`  ${label(i)}`, fmt(i.tokens)));
-    if (mine.length === 0) lines.push(c.dim("  (nothing always loaded)"));
+    for (const i of unmeasured) lines.push(row(`  ${label(i)}`, "?"));
+    if (mine.length + unmeasured.length === 0) lines.push(c.dim("  (nothing always loaded)"));
     lines.push(row("", "-".repeat(10)));
     lines.push(c.bold(row("  SUBTOTAL", fmt(subtotal))));
     lines.push(c.dim(`  ${((subtotal / WINDOW) * 100).toFixed(1)}% of a 200k window`));
+    if (unmeasured.length > 0) lines.push(c.dim("  ? = not measured, not in subtotal"));
     lines.push("");
   }
 
@@ -74,5 +77,7 @@ function row(left: string, right: string): string {
 }
 
 function label(i: Item): string {
-  return i.kind === "skill" ? `skill ${i.name}` : i.name;
+  if (i.kind === "skill") return `skill ${i.name}`;
+  if (i.kind === "mcp-server") return `mcp ${i.name}${i.detail ? ` (${i.detail})` : ""}`;
+  return i.name;
 }

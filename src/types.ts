@@ -11,6 +11,8 @@ export interface Item {
   scope: Scope;
   loading: Loading;
   tokens: number | null;
+  /** Short extra info, e.g. an MCP server's transport. Never contains config values. */
+  detail?: string;
 }
 
 export interface ScanContext {
