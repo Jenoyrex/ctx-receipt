@@ -60,7 +60,7 @@ describe("codex AGENTS.md walk and byte budget", () => {
     });
     expect(items.map((i) => i.name)).toEqual(["../AGENTS.md", "AGENTS.override.md"]);
     const cut = items[1];
-    expect(cut.detail).toBe("cut at project_doc_max_bytes");
+    expect(cut.detail).toBe("cut at byte cap");
     expect(cut.tokens).toBe(estimateTokens("b ".repeat(2_000).slice(0, 32 * 1024 - 30_000)));
   });
 });

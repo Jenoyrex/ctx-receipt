@@ -78,6 +78,7 @@ function row(left: string, right: string): string {
 
 function label(i: Item): string {
   if (i.kind === "skill") return `skill ${i.name}`;
-  if (i.kind === "mcp-server") return `mcp ${i.name}${i.detail ? ` (${i.detail})` : ""}`;
-  return i.name;
+  const detail = i.detail ? ` (${i.detail})` : "";
+  if (i.kind === "mcp-server") return `mcp ${i.name}${detail}`;
+  return `${i.name}${detail}`;
 }

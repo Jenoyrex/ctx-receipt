@@ -1,0 +1,4 @@
+---
+alwaysApply: false
+---
+- Migrations need up and down.

@@ -1,0 +1,5 @@
+---
+globs: *.tsx, src/**/*.tsx
+alwaysApply: false
+---
+- Use named exports.

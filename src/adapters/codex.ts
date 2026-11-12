@@ -74,7 +74,7 @@ export const codex: Adapter = {
       scope,
       loading: "always",
       tokens: estimateTokens(text),
-      ...(cut ? { detail: "cut at project_doc_max_bytes" } : {}),
+      ...(cut ? { detail: "cut at byte cap" } : {}),
     });
     const firstNonEmpty = (paths: string[]) =>
       paths.find((p) => isFile(p) && readFileSync(p, "utf8").trim() !== "");

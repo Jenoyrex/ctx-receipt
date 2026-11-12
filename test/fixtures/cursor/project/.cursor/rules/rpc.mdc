@@ -1,0 +1,5 @@
+---
+description: RPC service conventions for the backend
+alwaysApply: false
+---
+- One service per file under src/services/.
