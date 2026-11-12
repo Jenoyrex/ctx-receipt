@@ -1,0 +1,16 @@
+project_doc_fallback_filenames = ["TEAM.md"]
+
+[[skills.config]]
+name = "off"
+enabled = false
+
+[mcp_servers.docs]
+url = "https://docs.example.com/mcp"
+
+[mcp_servers.fs]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "."]
+
+[mcp_servers.old]
+command = "old-server"
+enabled = false

@@ -1,0 +1,6 @@
+[mcp_servers.fs]
+enabled = false
+
+[mcp_servers.project-db]
+command = "uvx"
+args = ["mcp-server-sqlite"]

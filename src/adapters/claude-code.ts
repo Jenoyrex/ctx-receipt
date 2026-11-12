@@ -32,7 +32,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import matter from "gray-matter";
 import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
-import { isObject, type McpServer, readJsonConfig, safeServers } from "../redact.js";
+import { isObject, type McpServer, readJsonConfig, safeServers, serverItem } from "../redact.js";
 import { findSkills, readSkill, type Skill, skillItems, str, truthy } from "../skills.js";
 import { estimateTokens } from "../tokens.js";
 import type { Adapter, Item, Loading, Scope } from "../types.js";
@@ -132,16 +132,7 @@ export const claudeCode: Adapter = {
     const addServers = (list: McpServer[], path: string, scope: Scope) => {
       for (const s of list) {
         if (servers.has(s.name) || RESERVED_MCP_NAMES.has(s.name)) continue;
-        servers.set(s.name, {
-          agent: AGENT,
-          kind: "mcp-server",
-          name: s.name,
-          path,
-          scope,
-          loading: "unmeasured",
-          tokens: null,
-          detail: s.transport,
-        });
+        servers.set(s.name, serverItem(AGENT, s, path, scope));
       }
     };
     const userConfigPath = join(ctx.home, ".claude.json");

@@ -24,7 +24,8 @@
     "commander": "^14.0.3",
     "gpt-tokenizer": "^4.1.2",
     "gray-matter": "^4.0.3",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "smol-toml": "^1.9.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.7",

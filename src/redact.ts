@@ -3,8 +3,10 @@
 // MCP configs hold API keys in `env`, `headers`, `args`, URLs, and sometimes in `command`
 // itself. Nothing from a config leaves this module except what `McpServer` allows: the
 // server's name (a key the user chose) and its transport. Parse errors are replaced with a
-// message that names the file only, because Node's JSON errors quote the input text.
+// message that names the file only, because JSON and TOML parse errors quote the input text.
 import { readFileSync } from "node:fs";
+import { parse as parseToml } from "smol-toml";
+import type { Item, Scope } from "./types.js";
 
 export interface McpServer {
   name: string;
@@ -15,6 +17,15 @@ export class ConfigError extends Error {}
 
 /** Parsed JSON, or null when the file does not exist. Throws ConfigError without file content. */
 export function readJsonConfig(path: string): unknown {
+  return readConfig(path, "JSON", JSON.parse);
+}
+
+/** Parsed TOML, or null when the file does not exist. Throws ConfigError without file content. */
+export function readTomlConfig(path: string): unknown {
+  return readConfig(path, "TOML", parseToml);
+}
+
+function readConfig(path: string, format: string, parse: (text: string) => unknown): unknown {
   let text: string;
   try {
     text = readFileSync(path, "utf8");
@@ -23,19 +34,24 @@ export function readJsonConfig(path: string): unknown {
     throw new ConfigError(`could not read ${path}`);
   }
   try {
-    return JSON.parse(text);
+    return parse(text);
   } catch {
-    throw new ConfigError(`could not parse ${path} (invalid JSON)`);
+    throw new ConfigError(`could not parse ${path} (invalid ${format})`);
   }
 }
 
-/** Safe summaries of an `mcpServers`-style map: { [name]: { command | url | type, ... } }. */
-export function safeServers(map: unknown): McpServer[] {
+/**
+ * Safe summaries of an MCP server map: { [name]: { command | url | type, ... } }.
+ * `skip` lets an adapter drop entries by a boolean flag such as Codex's `enabled = false`.
+ */
+export function safeServers(
+  map: unknown,
+  skip: (entry: Record<string, unknown>) => boolean = () => false,
+): McpServer[] {
   if (!isObject(map)) return [];
-  return Object.entries(map).map(([name, entry]) => ({
-    name,
-    transport: transportOf(isObject(entry) ? entry : {}),
-  }));
+  return Object.entries(map)
+    .filter(([, e]) => !(isObject(e) && skip(e)))
+    .map(([name, entry]) => ({ name, transport: transportOf(isObject(entry) ? entry : {}) }));
 }
 
 function transportOf(e: Record<string, unknown>): McpServer["transport"] {
@@ -45,6 +61,20 @@ function transportOf(e: Record<string, unknown>): McpServer["transport"] {
   if (t === "" && typeof e.command === "string") return "stdio";
   if (t === "" && typeof e.url === "string") return "http";
   return "unknown";
+}
+
+/** The receipt line for a server: tokens unknown until measured with --mcp. */
+export function serverItem(agent: string, s: McpServer, path: string, scope: Scope): Item {
+  return {
+    agent,
+    kind: "mcp-server",
+    name: s.name,
+    path,
+    scope,
+    loading: "unmeasured",
+    tokens: null,
+    detail: s.transport,
+  };
 }
 
 export function isObject(v: unknown): v is Record<string, unknown> {

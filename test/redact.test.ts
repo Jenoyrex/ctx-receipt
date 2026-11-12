@@ -31,7 +31,9 @@ describe("secrets never appear in output", () => {
   test("scan records", () => {
     const items = scan({ project, home, includeUser: true });
     expect(JSON.stringify(items)).not.toMatch(LEAK);
-    expect(items.filter((i) => i.kind === "mcp-server").map((i) => i.name)).toEqual([
+    const servers = (agent: string) =>
+      items.filter((i) => i.kind === "mcp-server" && i.agent === agent).map((i) => i.name);
+    expect(servers("claude-code")).toEqual([
       "github",
       "inline-env",
       "secret-path",
@@ -41,6 +43,7 @@ describe("secrets never appear in output", () => {
       "env-ref",
       "user-db",
     ]);
+    expect(servers("codex")).toEqual(["codex-github", "codex-remote", "codex-project"]);
   });
 
   test("safeServers keeps only name and transport", () => {
@@ -98,6 +101,17 @@ describe("~/.claude.json local scope and broken configs", () => {
     const r = cli(broken, "--no-user");
     expect(r.status).toBe(3);
     expect(r.stderr).toContain("could not parse");
+    expect(r.stdout + r.stderr).not.toMatch(LEAK);
+  });
+
+  test("invalid TOML exits 3 with a message that does not quote the file", () => {
+    // smol-toml's own error message quotes the offending line.
+    const broken = join(tmp, "broken-toml");
+    mkdirSync(join(broken, ".codex"), { recursive: true });
+    writeFileSync(join(broken, ".codex", "config.toml"), 'token = "sk-FAKE-0000-LEAKCHECK\nx =');
+    const r = cli(broken, "--no-user");
+    expect(r.status).toBe(3);
+    expect(r.stderr).toContain("invalid TOML");
     expect(r.stdout + r.stderr).not.toMatch(LEAK);
   });
 });
