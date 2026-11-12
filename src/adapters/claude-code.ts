@@ -28,10 +28,11 @@
 // skills, plugin skills, bundled skills, and the listing's overall budget (1% of the window),
 // which can drop descriptions when there are many skills. MCP from plugins, claude.ai
 // connectors, managed-mcp.json, and .mcp.json approvals (disabledMcpjsonServers etc.).
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import matter from "gray-matter";
 import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
+import { findImports, listMarkdown, stripHtmlComments } from "../markdown.js";
 import { isObject, type McpServer, readJsonConfig, safeServers, serverItem } from "../redact.js";
 import { findSkills, readSkill, type Skill, skillItems, str, truthy } from "../skills.js";
 import { estimateTokens } from "../tokens.js";
@@ -40,7 +41,6 @@ import type { Adapter, Item, Loading, Scope } from "../types.js";
 const AGENT = "claude-code";
 const MAX_IMPORT_HOPS = 4;
 const MAX_LISTING_CHARS = 1536;
-const FENCE = /^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^ {0,3}\1[^\n]*$|(?![\s\S]))/gm;
 
 export const claudeCode: Adapter = {
   id: AGENT,
@@ -190,46 +190,4 @@ function parseRule(raw: string): { body: string; scoped: boolean } {
     // Claude Code ignores frontmatter it cannot parse and loads the rule as if it had no `paths`.
     return { body: raw, scoped: false };
   }
-}
-
-/** Block-level HTML comments are stripped before loading; ones inside code blocks are kept. */
-export function stripHtmlComments(text: string): string {
-  return mapOutsideFences(text, (s) => s.replace(/^[ \t]*<!--[\s\S]*?-->[ \t]*\n?/gm, ""));
-}
-
-/** Absolute paths of existing files imported with @path. */
-export function findImports(text: string, baseDir: string, home: string): string[] {
-  const prose = mapOutsideFences(text, (s) => s.replace(/`[^`\n]*`/g, ""), true);
-  const out: string[] = [];
-  for (const m of prose.matchAll(/(?:^|\s)@((?:\\ |[^\s])+)/g)) {
-    const raw = m[1].replace(/\\ /g, " ");
-    if (raw.startsWith('"') || raw.startsWith("'")) continue;
-    const path = raw.startsWith("~/") ? join(home, raw.slice(2)) : resolve(baseDir, raw);
-    if (isFile(path)) out.push(path);
-  }
-  return out;
-}
-
-function mapOutsideFences(text: string, fn: (s: string) => string, dropFences = false): string {
-  let out = "";
-  let last = 0;
-  for (const m of text.matchAll(FENCE)) {
-    out += fn(text.slice(last, m.index)) + (dropFences ? "" : m[0]);
-    last = m.index + m[0].length;
-  }
-  return out + fn(text.slice(last));
-}
-
-function listMarkdown(dir: string): string[] {
-  let entries: string[];
-  try {
-    entries = readdirSync(dir, { recursive: true, encoding: "utf8" });
-  } catch {
-    return [];
-  }
-  return entries
-    .filter((e) => e.endsWith(".md"))
-    .map((e) => join(dir, e))
-    .filter(isFile)
-    .sort();
 }

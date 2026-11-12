@@ -15,7 +15,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { displayPath, isFile } from "../fs.js";
-import { isObject, readJsonConfig, safeServers, serverItem } from "../redact.js";
+import { isObject, readJsoncConfig, safeServers, serverItem } from "../redact.js";
 import { truthy } from "../skills.js";
 import { estimateTokens } from "../tokens.js";
 import type { Adapter, Item, Loading, Scope } from "../types.js";
@@ -62,7 +62,7 @@ export const cursor: Adapter = {
     }
 
     const addServers = (path: string, scope: Scope) => {
-      const config = readJsonConfig(path);
+      const config = readJsoncConfig(path);
       const map = isObject(config) ? config.mcpServers : null;
       for (const s of safeServers(map)) items.push(serverItem(AGENT, s, path, scope));
     };

@@ -1,0 +1,1 @@
+{ "mcpServers": { "db": { "url": "https://db.example.com/sse" } } }

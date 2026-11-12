@@ -1,6 +1,7 @@
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
-import { claudeCode, findImports, stripHtmlComments } from "../../src/adapters/claude-code.js";
+import { claudeCode } from "../../src/adapters/claude-code.js";
+import { findImports, stripHtmlComments } from "../../src/markdown.js";
 import type { ScanContext } from "../../src/types.js";
 
 const root = resolve("test/fixtures/claude-code");

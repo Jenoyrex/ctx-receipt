@@ -45,6 +45,7 @@ describe("secrets never appear in output", () => {
     ]);
     expect(servers("codex")).toEqual(["codex-github", "codex-remote", "codex-project"]);
     expect(servers("cursor")).toEqual(["cursor-remote", "cursor-user"]);
+    expect(servers("gemini")).toEqual(["gemini-user", "gemini-http", "gemini-project"]);
   });
 
   test("safeServers keeps only name and transport", () => {

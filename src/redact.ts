@@ -20,6 +20,34 @@ export function readJsonConfig(path: string): unknown {
   return readConfig(path, "JSON", JSON.parse);
 }
 
+/** JSON that may contain // and /* *\/ comments (Gemini settings, Cursor mcp.json). */
+export function readJsoncConfig(path: string): unknown {
+  return readConfig(path, "JSON", (text) => JSON.parse(stripJsonComments(text)));
+}
+
+/** Removes comments outside strings. Trailing commas are still invalid, as in the agents. */
+export function stripJsonComments(text: string): string {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      const start = i;
+      for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === "\\") i++;
+      out += text.slice(start, i + 1);
+    } else if (ch === "/" && text[i + 1] === "/") {
+      while (i < text.length && text[i] !== "\n") i++;
+      out += "\n";
+    } else if (ch === "/" && text[i + 1] === "*") {
+      const end = text.indexOf("*/", i + 2);
+      i = end === -1 ? text.length : end + 1;
+      out += " ";
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+
 /** Parsed TOML, or null when the file does not exist. Throws ConfigError without file content. */
 export function readTomlConfig(path: string): unknown {
   return readConfig(path, "TOML", parseToml);

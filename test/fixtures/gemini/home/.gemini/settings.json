@@ -1,0 +1,13 @@
+{
+  // comments are allowed in Gemini settings
+  "context": { "fileName": ["AGENTS.md", "GEMINI.md"] },
+  "skills": { "disabled": ["off"] },
+  "mcp": { "excluded": ["noisy"] },
+  "mcpServers": {
+    "search": { "httpUrl": "https://search.example.com/mcp" },
+    "events": { "url": "https://events.example.com/sse" },
+    "noisy": { "command": "noisy-server" },
+    /* overridden by the project */
+    "db": { "command": "user-db" }
+  }
+}
