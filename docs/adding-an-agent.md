@@ -30,6 +30,7 @@ export const myAgent: Adapter = {
   id: "my-agent", // used by --agent
   label: "My Agent", // shown on the receipt
   verified: true,
+  homeDir: ".my-agent", // config folder in home; missing = not installed, home files skipped
   scan(ctx) {
     // ctx: { project, home, includeUser }
     return []; // Item[]
@@ -64,7 +65,8 @@ Use the shared helpers instead of writing new ones:
   cut what it cuts (byte budgets, per-description caps).
 - Skills and agent-selected rules: the name and description line is `always`; the body is
   `on-demand`.
-- Respect `ctx.includeUser`: with `--no-user`, read nothing under `ctx.home`.
+- Respect `ctx.includeUser`: with `--no-user`, or when `homeDir` is missing from home (agent
+  not installed), it is false; read nothing under `ctx.home` then.
 - Walk directories the way the agent does: some stop at the git root, some at a marker file,
   some at home.
 

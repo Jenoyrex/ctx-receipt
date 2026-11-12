@@ -29,5 +29,7 @@ export interface Adapter {
   label: string;
   /** True once paths and formats were checked against the agent's official docs. */
   verified: boolean;
+  /** Config folder under home (e.g. ".codex"). Missing means not installed: skip home files. */
+  homeDir: string;
   scan(ctx: ScanContext): Item[];
 }

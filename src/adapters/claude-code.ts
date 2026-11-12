@@ -29,6 +29,7 @@
 // which can drop descriptions when there are many skills. MCP from plugins, claude.ai
 // connectors, managed-mcp.json, and .mcp.json approvals (disabledMcpjsonServers etc.).
 import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import matter from "gray-matter";
 import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
@@ -46,6 +47,7 @@ export const claudeCode: Adapter = {
   id: AGENT,
   label: "Claude Code",
   verified: true,
+  homeDir: ".claude",
   scan(ctx) {
     const items: Item[] = [];
     const seen = new Set<string>();
@@ -116,9 +118,16 @@ export const claudeCode: Adapter = {
       loadCommands(join(dot, "commands"), "user");
     }
 
+    // ~/.claude/CLAUDE.md is the user file even when home is above the project, so it never
+    // counts as a project file (and does not switch off the AGENTS.md fallback).
+    const userFiles = new Set(
+      [ctx.home, homedir()].map((h) => realPath(join(h, ".claude", "CLAUDE.md"))),
+    );
     const dirs = ancestors(ctx.project);
     const pick = (names: string[]) =>
-      dirs.flatMap((d) => names.map((n) => join(d, n))).filter(isFile);
+      dirs
+        .flatMap((d) => names.map((n) => join(d, n)))
+        .filter((p) => isFile(p) && !userFiles.has(realPath(p)));
     const claudeFiles = pick(["CLAUDE.md", join(".claude", "CLAUDE.md"), "CLAUDE.local.md"]);
     const files =
       claudeFiles.length > 0 ? claudeFiles : pick(["AGENTS.md", join(".claude", "AGENTS.md")]);

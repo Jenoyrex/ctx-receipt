@@ -46,6 +46,7 @@ export const codex: Adapter = {
   id: AGENT,
   label: "Codex CLI",
   verified: true,
+  homeDir: ".codex",
   scan(ctx) {
     const items: Item[] = [];
     const codexHome = join(ctx.home, ".codex");

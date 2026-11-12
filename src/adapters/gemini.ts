@@ -36,6 +36,7 @@ export const gemini: Adapter = {
   id: AGENT,
   label: "Gemini CLI",
   verified: true,
+  homeDir: ".gemini",
   scan(ctx) {
     const items: Item[] = [];
     const geminiHome = join(ctx.home, ".gemini");

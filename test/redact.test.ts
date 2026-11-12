@@ -62,7 +62,7 @@ describe("~/.claude.json local scope and broken configs", () => {
   const tmpProject = join(tmp, "project");
   const tmpHome = join(tmp, "home");
   cpSync(project, tmpProject, { recursive: true });
-  mkdirSync(tmpHome);
+  mkdirSync(join(tmpHome, ".claude"), { recursive: true });
   const userConfig = JSON.parse(readFileSync(join(home, ".claude.json"), "utf8"));
   // Claude Code keys projects by path; on Windows with forward slashes.
   userConfig.projects = {

@@ -26,6 +26,7 @@ export const cursor: Adapter = {
   id: AGENT,
   label: "Cursor",
   verified: true,
+  homeDir: ".cursor",
   scan(ctx) {
     const items: Item[] = [];
     const rule = (path: string, loading: Loading, text: string, detail?: string): Item => ({
