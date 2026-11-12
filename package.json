@@ -1,0 +1,33 @@
+{
+  "name": "ctx-receipt",
+  "version": "0.0.0",
+  "description": "See what your AI coding agent loads into context before you type a word. A token receipt for your rules files, skills, and MCP servers.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "ctx-receipt": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "@types/node": "^20.19.43",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12"
+  }
+}
