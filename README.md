@@ -1,5 +1,10 @@
 # ctx-receipt
 
+[![CI](https://github.com/Jenoyrex/ctx-receipt/actions/workflows/ci.yml/badge.svg)](https://github.com/Jenoyrex/ctx-receipt/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/ctx-receipt)](https://www.npmjs.com/package/ctx-receipt)
+[![Node.js](https://img.shields.io/node/v/ctx-receipt)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 See what your AI coding agent loads into context before you type a word. A token receipt for
 your rules files, skills, and MCP servers.
 
@@ -12,6 +17,28 @@ project and your home config, finds what each agent would load, and prints a rec
 
 All token counts are **estimates**, made offline with the `o200k_base` tokenizer. Each agent's
 own tokenizer gives different numbers. See [How we count](docs/how-we-count.md).
+
+**Why it is useful**
+
+- **One view across agents.** Claude Code, Codex CLI, Cursor, and Gemini CLI side by side.
+- **Works before you start a session**, and in CI, so a growing `CLAUDE.md` or a new MCP server
+  shows up in a pull request instead of in a slow, forgetful session.
+- **Counts everything that pre-loads**: rules files and their imports, skill listings, and MCP
+  tools, each split into what is always loaded and what loads only on demand.
+- **Shareable.** Write a receipt card with `--svg`, a report with `--md`, or JSON with `--json`.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Example](#example)
+- [What it counts](#what-it-counts)
+- [MCP servers and `--mcp`](#mcp-servers-and---mcp)
+- [Options](#options)
+- [Use in CI](#use-in-ci)
+- [Supported agents](#supported-agents)
+- [FAQ](#faq)
+- [Limitations](#limitations)
+- [Contributing](#contributing)
 
 ## Quick start
 
@@ -210,6 +237,39 @@ Each adapter was written from the agent's official documentation, checked on 202
 Where the docs disagree or say nothing, we take the reading that counts more, and say so in
 the adapter's source and in [How we count](docs/how-we-count.md).
 
+## FAQ
+
+**Why are my numbers lower than Claude Code's `/context`?**
+`/context` uses Claude's own tokenizer and also includes Claude Code's system prompt, built-in
+tools, and the text it wraps around your files. ctx-receipt counts only what comes from your
+files and config, with a different tokenizer. Use it to compare setups and spot what grew, not
+to predict `/context` exactly.
+
+**Does it send my files anywhere?**
+No. ctx-receipt runs locally, makes no network calls, and has no telemetry. The only processes it
+starts are your MCP servers, and only when you pass `--mcp`.
+
+**Is `--mcp` safe?**
+It runs the commands in your MCP config, the same ones your agent runs when it starts. It lists
+which servers it will start before starting them, gives each one 10 seconds, and shuts every
+one down afterwards. If you do not trust a server, do not run `--mcp` on it; use
+`--mcp <name>` to start one server at a time.
+
+**Will it print my API keys?**
+No. From MCP configs it keeps only server names and transports. The command, arguments,
+environment, URLs, and headers are never printed or written, and the test suite checks this for
+every config format and every output.
+
+**An agent I do not use shows up. Why?**
+Some folders are shared: Codex and Gemini CLI both read `~/.agents/skills`, and three agents
+read `AGENTS.md`. ctx-receipt skips home files for agents whose config folder (for example
+`~/.gemini`) does not exist, but project files are counted for every agent. Use `--agent` to
+narrow the report.
+
+**What does the grade mean?**
+It is based on the agent that pre-loads the most: A under 5k tokens, B under 15k, C under 30k,
+D under 60k, F above. The cut-offs are our own opinion, a prompt to look rather than a verdict.
+
 ## Limitations
 
 - Numbers are estimates from one tokenizer, not each agent's. They do not include the agent's
@@ -220,7 +280,7 @@ the adapter's source and in [How we count](docs/how-we-count.md).
 - Settings that live inside an app rather than in files (Cursor User Rules, toggles in `/mcp`)
   are invisible to us.
 - Behaviour follows each agent's docs at the date above. Agents change fast; if something looks
-  wrong, please [open an issue](CONTRIBUTING.md).
+  wrong, please [open an issue](https://github.com/Jenoyrex/ctx-receipt/issues).
 
 ## Contributing
 

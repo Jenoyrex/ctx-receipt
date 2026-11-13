@@ -23,6 +23,7 @@
     "url": "git+https://github.com/Jenoyrex/ctx-receipt.git"
   },
   "license": "MIT",
+  "author": "Jenoyrex (https://github.com/Jenoyrex)",
   "type": "module",
   "bin": {
     "ctx-receipt": "dist/cli.js"
