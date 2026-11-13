@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ctx-receipt social preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    background: radial-gradient(circle at 20% 15%, #1f2a44 0%, #0d1117 55%);
+    color: #e6edf3;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; gap: 56px; padding: 0 72px;
+  }
+  .left { flex: 1; }
+  .name {
+    font-family: Consolas, "Cascadia Mono", ui-monospace, monospace;
+    font-size: 30px; color: #7ee787; letter-spacing: 1px; margin-bottom: 18px;
+  }
+  h1 { font-size: 56px; line-height: 1.08; font-weight: 700; margin-bottom: 22px; }
+  h1 em { font-style: normal; color: #ffa657; }
+  .sub { font-size: 25px; line-height: 1.4; color: #9da7b3; margin-bottom: 34px; max-width: 640px; }
+  .cmd {
+    display: inline-block; font-family: Consolas, "Cascadia Mono", ui-monospace, monospace;
+    font-size: 30px; background: #161b22; border: 2px solid #30363d; border-radius: 12px;
+    padding: 14px 26px; color: #e6edf3;
+  }
+  .cmd span { color: #7ee787; }
+  .agents { margin-top: 26px; font-size: 20px; color: #9da7b3; }
+  .receipt {
+    width: 410px; background: #fffdf6; color: #1f2328; border-radius: 10px;
+    padding: 28px 30px 24px; font-family: Consolas, "Cascadia Mono", ui-monospace, monospace;
+    font-size: 19px; line-height: 1.55; box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    transform: rotate(2deg);
+  }
+  .receipt .title { text-align: center; font-weight: 700; font-size: 24px; }
+  .receipt .small { text-align: center; color: #57606a; font-size: 15px; margin-bottom: 8px; }
+  .receipt hr { border: none; border-top: 2px dashed #d8d2c4; margin: 10px 0; }
+  .row { display: flex; justify-content: space-between; }
+  .b { font-weight: 700; }
+  .m { color: #57606a; }
+  .grade { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .grade .g { font-size: 40px; font-weight: 700; color: #1a7f37; }
+  .note { text-align: center; color: #57606a; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="name">ctx-receipt</div>
+    <h1>Your AI coding agent has a <em>hidden context bill.</em></h1>
+    <p class="sub">See what Claude Code, Codex, Cursor and Gemini CLI load before you type a word.</p>
+    <div class="cmd"><span>$</span> npx ctx-receipt</div>
+    <div class="agents">Open source &middot; MIT &middot; Local only &middot; No account</div>
+  </div>
+  <div class="receipt">
+    <div class="title">CTX-RECEIPT</div>
+    <div class="small">loaded before your first prompt</div>
+    <hr>
+    <div class="row b"><span>CLAUDE CODE</span><span>167</span></div>
+    <div class="row m"><span>&nbsp;&nbsp;CLAUDE.md</span><span>69</span></div>
+    <div class="row m"><span>&nbsp;&nbsp;@docs/architecture.md</span><span>64</span></div>
+    <div class="row m"><span>&nbsp;&nbsp;skill review</span><span>17</span></div>
+    <div class="row b"><span>CODEX CLI</span><span>41</span></div>
+    <div class="row b"><span>CURSOR</span><span>40</span></div>
+    <hr>
+    <div class="row b"><span>TOTAL ALWAYS LOADED</span><span>248</span></div>
+    <div class="grade"><span>GRADE</span><span class="g">A</span></div>
+    <div class="note">token counts are estimates</div>
+  </div>
+</body>
+</html>
