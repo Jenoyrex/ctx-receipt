@@ -5,11 +5,9 @@ checked, and what is left. Last updated 2026-11-13.
 
 ## Where things stand
 
-- **Published:** [`ctx-receipt` on npm](https://www.npmjs.com/package/ctx-receipt), latest
-  **0.1.1**. Versions 0.1.0 and 0.1.1 are both live and byte-identical to their local builds
-  (shasums `bf3a881…` and `8b78d63…`).
+- **Published:** [`ctx-receipt` on npm](https://www.npmjs.com/package/ctx-receipt), latest **0.1.2**. Versions 0.1.0, 0.1.1, and 0.1.2 are live and byte-identical to their local builds (shasums `bf3a881…`, `8b78d63…`, `547ca3e…`).
 - **Repository:** [github.com/Jenoyrex/ctx-receipt](https://github.com/Jenoyrex/ctx-receipt),
-  public, tags `v0.1.0` and `v0.1.1`.
+  public, tags `v0.1.0`, `v0.1.1`, and `v0.1.2`.
 - **Checks:** lint, typecheck, and build pass; **92 tests in 13 files** pass. CI passes on Node 20
   and 22, including a step that packs the tarball, installs it in an empty folder, and runs it.
 - **Blocked:** nothing.
@@ -28,6 +26,7 @@ checked, and what is left. Last updated 2026-11-13.
 | M9        | Release dry run with `npm pack`                                    | Done   |
 | 0.1.0     | First release on npm                                               | Done   |
 | 0.1.1     | Fixes from comparing with Claude Code's `/context`                 | Done   |
+| 0.1.2     | README polish published to npm                                     | Done   |
 
 ## Timeline
 
@@ -48,6 +47,8 @@ checked, and what is left. Last updated 2026-11-13.
 | 2026-11-13 | `a176c71`                       | Release workflow skips versions already on npm; tag `v0.1.0`           |
 | 2026-11-13 | `0a1cd75`                       | Comparison with `/context` on a real project                           |
 | 2026-11-13 | `a4b242d`                       | 0.1.1: custom agents, auto memory, `--window`, Claude-tokenizer figure |
+| 2026-11-13 | `c9544b9`                       | PROGRESS.md rewritten; README: install, outputs, privacy and safety    |
+| 2026-11-13 | `4c02d24`                       | 0.1.2 published with the new README; tag `v0.1.2`                      |
 
 ## What ctx-receipt does
 
