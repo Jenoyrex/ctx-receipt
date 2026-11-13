@@ -32,7 +32,10 @@ check CI, and move to M7.
 ## Decisions (M6 to M9)
 
 - Lock file: regenerated from a clean `npm install` (no `node_modules`), which records optional
-  packages for every platform. Only additions; no version changed.
+  packages for every platform. Only additions; no version changed. `npm install <pkg>` on
+  Windows with an existing `node_modules` drops them again (it broke CI a second time after the
+  MCP SDK was added), so after adding a dependency: delete `node_modules` and
+  `package-lock.json`, run `npm install`, and check that `@emnapi/core` is in the lock file.
 - Added `@modelcontextprotocol/sdk` 1.32.2 (approved). It brings server-side packages too
   (express, hono, zod); only the client is used.
 - `--mcp` is loaded lazily: importing the MCP SDK roughly tripled CLI start time.
