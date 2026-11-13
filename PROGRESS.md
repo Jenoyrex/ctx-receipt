@@ -1,281 +1,311 @@
 # Progress log
 
-What has been built so far, the decisions behind it, and what is left. Milestones follow the
-original plan (Step 0, M1 to M9). Last updated 2026-11-12.
+The full record of how ctx-receipt was built: what was done, the decisions behind it, what was
+checked, and what is left. Last updated 2026-11-13.
 
-## Status
+## Where things stand
 
-| Milestone | What                                                                    | Status |
-| --------- | ----------------------------------------------------------------------- | ------ |
-| Step 0    | Check the npm name, init git                                            | Done   |
-| M1        | Skeleton: build, lint, test, CI, `--version`                            | Done   |
-| M2        | Core scan, Claude Code rules, plain receipt                             | Done   |
-| M3        | Skills (Claude Code, Codex)                                             | Done   |
-| M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done   |
-| M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done   |
-| M6        | `--mcp` live measurement                                                | Done   |
-| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Done   |
-| M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Done   |
-| M9        | Release dry run with `npm pack`                                         | Done   |
+- **Published:** [`ctx-receipt` on npm](https://www.npmjs.com/package/ctx-receipt), latest
+  **0.1.1**. Versions 0.1.0 and 0.1.1 are both live and byte-identical to their local builds
+  (shasums `bf3a881…` and `8b78d63…`).
+- **Repository:** [github.com/Jenoyrex/ctx-receipt](https://github.com/Jenoyrex/ctx-receipt),
+  public, tags `v0.1.0` and `v0.1.1`.
+- **Checks:** lint, typecheck, and build pass; **92 tests in 13 files** pass. CI passes on Node 20
+  and 22, including a step that packs the tarball, installs it in an empty folder, and runs it.
+- **Blocked:** nothing.
 
-Current checks: lint, typecheck, and build pass; 81 tests in 12 files pass. Earlier: 61 tests (three runs in a
-row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
+| Milestone | What                                                               | Status |
+| --------- | ------------------------------------------------------------------ | ------ |
+| Step 0    | Check the npm name, init git                                       | Done   |
+| M1        | Skeleton: build, lint, test, CI, `--version`                       | Done   |
+| M2        | Core scan, Claude Code rules, plain receipt                        | Done   |
+| M3        | Skills (Claude Code, Codex)                                        | Done   |
+| M4        | MCP servers listed statically, secret-safe reading, leak tests     | Done   |
+| M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`      | Done   |
+| M6        | `--mcp` live measurement                                           | Done   |
+| M7        | `--json`, `--md`, `--svg`, `--budget`, grade, skill listing caps   | Done   |
+| M8        | README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Done   |
+| M9        | Release dry run with `npm pack`                                    | Done   |
+| 0.1.0     | First release on npm                                               | Done   |
+| 0.1.1     | Fixes from comparing with Claude Code's `/context`                 | Done   |
 
-## Now
+## Timeline
 
-All milestones (Step 0 to M9) are done, and **0.1.0 is published on npm** (2026-11-13), tagged
-`v0.1.0` on GitHub. What is left needs a person: see "Left for you" at the end of this file.
+| Date       | Commit                          | What                                                                   |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------- |
+| 2026-11-12 | `4f11f05`                       | M1 skeleton                                                            |
+| 2026-11-12 | `37bb957`                       | M2 core scan and Claude Code rules                                     |
+| 2026-11-12 | `ce19997`                       | M3 skills                                                              |
+| 2026-11-12 | `a3adc89`                       | M4 static MCP listing and leak tests                                   |
+| 2026-11-12 | `5caa593`, `c4dac85`, `e80e722` | M5 Codex, Cursor, Gemini CLI adapters                                  |
+| 2026-11-12 | `c8ed737`                       | Agents that are not installed skip home files                          |
+| 2026-11-12 | `ee2cf4e`                       | Lock file fix for Linux CI                                             |
+| 2026-11-13 | `c7917ac`                       | M6 `--mcp`                                                             |
+| 2026-11-13 | `c589307`, `3109f68`            | M7 listing caps and outputs                                            |
+| 2026-11-13 | `8285f67`                       | M8 docs and release workflow                                           |
+| 2026-11-13 | `3714899`                       | M9 release dry run; CI runs the packed tarball                         |
+| 2026-11-13 | `eb11461`                       | README polish; repository made public; 0.1.0 published                 |
+| 2026-11-13 | `a176c71`                       | Release workflow skips versions already on npm; tag `v0.1.0`           |
+| 2026-11-13 | `0a1cd75`                       | Comparison with `/context` on a real project                           |
+| 2026-11-13 | `a4b242d`                       | 0.1.1: custom agents, auto memory, `--window`, Claude-tokenizer figure |
 
-Release notes:
+## What ctx-receipt does
 
-- Before going public, the commit author email was rewritten to the GitHub private address on
-  all commits (files unchanged) and force-pushed; the repo then went public.
-- npm required two-factor authentication on the account to publish; it was turned on in the
-  website (a security key, "auth-and-writes"). The command-line `npm profile enable-2fa` was
-  refused.
-- npm used staged publishing: the first upload showed only a `0.0.0-stage` placeholder until
-  0.1.0 was released from "Staged Packages". The live 0.1.0 has the same shasum as the local
-  build (`bf3a881…`), and `npx ctx-receipt` from an empty folder printed the same receipt as the
-  repo build.
-- The release workflow now skips `npm publish` when the version is already on npm, so the
-  `v0.1.0` tag run is green. The tag sits on that workflow commit, which changes no package file.
+`npx ctx-receipt` scans a project and the home folder, finds what each coding agent pre-loads
+into its context window, estimates the tokens offline (`o200k_base` via gpt-tokenizer), and
+prints a receipt with per-agent subtotals, an on-demand section, a total, and a letter grade. It
+can also write JSON, Markdown, and an SVG card, fail CI over a budget, and, with `--mcp`, start
+stdio MCP servers to measure their tools.
 
-## Decisions (M6 to M9)
-
-- Lock file: regenerated from a clean `npm install` (no `node_modules`), which records optional
-  packages for every platform. Only additions; no version changed. `npm install <pkg>` on
-  Windows with an existing `node_modules` drops them again (it broke CI a second time after the
-  MCP SDK was added), so after adding a dependency: delete `node_modules` and
-  `package-lock.json`, run `npm install`, and check that `@emnapi/core` is in the lock file.
-- Added `@modelcontextprotocol/sdk` 1.32.2 (approved). It brings server-side packages too
-  (express, hono, zod); only the client is used.
-- `--mcp` is loaded lazily: importing the MCP SDK roughly tripled CLI start time.
-- Before launching, `--mcp` prints agent, server name, transport, and config file to stderr, never
-  the command. Start failures report only "failed to start" or "timed out", because spawn errors
-  name the command.
-- Servers get the MCP SDK's default safe environment (PATH, HOME, and similar) plus the `env`
-  from their config. `${VAR}`, `${VAR:-default}` and `${env:VAR}` are expanded (not for Codex,
-  which forwards `env_vars` instead). Servers start in the project directory unless `cwd` is set.
-- All selected servers start in parallel; each has its own 10 s timeout.
-- Up front vs full: Claude Code defers schemas by default (names + server instructions up front).
-  `ENABLE_TOOL_SEARCH=false`, `auto`, `auto:N`, `"alwaysLoad": true` on the server, and
-  `_meta["anthropic/alwaysLoad"]` on a tool count as loaded up front; for `auto` that is the
-  conservative reading. Codex, Cursor, and Gemini CLI: up front = full.
-- Tool filters honored: Codex `enabled_tools`/`disabled_tools`, Gemini `includeTools`/`excludeTools`.
-- vitest `testTimeout` raised to 15 s and the CLI usage-error test split into one spawn per case.
-  The old test ran three CLI processes in one 5 s budget and failed under load once the MCP tests
-  started servers in parallel. No assertion changed.
-- Leak tests checked by planting leaks: a reason that included the server's args made the leak
-  test fail, as it should. On Windows, cross-spawn runs commands through cmd.exe, so a missing
-  command never produces a spawn error; on Linux it would, and its message names the command.
-
-- Skill listing cap (M7): Claude Code caps the listing at `skillListingBudgetFraction` of the
-  window (default 1%, read from `~/.claude/settings.json`), Codex at 2% or
-  `skills.max_context_tokens` (at most 10,000). Gemini CLI documents no cap. Over the cap we keep
-  every skill's name and scale the description share of each listing line down until the total
-  fits, and mark those lines "listing cap". Agents drop the least-used descriptions instead; we
-  cannot know usage, so per-skill numbers are approximate but the total matches the cap. Window
-  size is assumed to be 200k for every agent.
-- `--json` replaces the receipt on stdout. `--md <file>` and `--svg <file>` write files in
-  addition to the receipt (or the JSON). These are the only files the tool writes, and only
-  where the user points them.
-- JSON and Markdown name files project-relative or with `~/`, never as absolute paths.
-- The SVG card shows per-agent totals and counts (rules, skills, MCP servers) and no file or
-  server names, so no home path can appear. It draws its own opaque paper background and
-  border, so it reads the same on GitHub's light and dark themes (checked in a browser on
-  `#ffffff` and `#0d1117`).
-- `--budget <tokens>` checks the total always loaded across all agents shown (the receipt's
-  TOTAL line), as the plan says. Exit 1 when over; the report still prints. Use `--agent` to
-  budget one agent. A value that is not a whole number exits 2.
-- The grade uses the heaviest agent's always-loaded tokens (cut-offs in `src/grade.ts`).
-- Version set to 0.1.0 (the first release), with repository, homepage, bugs, and keywords in
-  package.json. No author field: that is yours to add if you want it.
-- The README example comes from `examples/demo` (a small project and a fake home). The example
-  receipt in the README was compared with a real run character for character. Every other README
-  command was run against the demo with `--home examples/demo/home`, and the exit codes (0, 1, 2,
-  3) matched. `npx ctx-receipt` itself cannot run until the package is published; M9 runs the
-  same CLI from the packed tarball instead.
-- `examples/demo` is excluded from Biome: Biome formats Markdown, which would change the demo
-  files' token counts and break the README example.
-- `docs/how-we-count.md` written; it states the grade cut-offs are our own opinion.
-- The release workflow publishes on a `v*` tag with npm provenance, after lint, typecheck, build,
-  tests, and a check that the tag matches package.json. It needs an `NPM_TOKEN` repository
-  secret. No tag was created.
-- M9 release dry run (Windows, Node 25): `npm pack` gives 6 files, 18.7 kB (LICENSE, README,
-  package.json, `dist/`). Installed into an empty folder, the tarball's CLI printed `0.1.0`, and
-  its demo receipt was identical to the repo build. `--json`, `--md`, `--svg`, `--budget`, and
-  `--mcp`/`--mcp plain` (fixture servers only; the hanging one timed out at 10 s and was killed,
-  14 s in all) all worked. The secrets fixture leaked nothing in any format, every agent
-  fixture ran, the exit codes were right, and no fake-server process was left running.
-- Found in M9: `npx <bare Windows path to .tgz>` silently runs nothing and exits 0, while
-  `npx file:<path>` and `npm exec --package=<path>` work. That is npx's handling of Windows
-  paths, not the package; `npx ctx-receipt` from the registry resolves by name. Not changed.
-- CI now also packs, installs the tarball in an empty folder, and runs it on Linux with Node 20
-  and 22, because the local dry run could only use Node 25 on Windows.
-
-- 0.1.1, after comparing with Claude Code's `/context` on a real project (details in
-  `docs/how-we-count.md`): custom agents and auto memory are counted; `--window` sets the window
-  (default unchanged at 200k, so existing output only gains the new lines); the receipt shows a
-  rough Claude-tokenizer figure (x1.6) that never feeds totals, budgets, or grades. Agent files
-  can define MCP servers inline with keys in `env`; only `name`, `description`, and `tools` are
-  read from them.
-
-## Unverified
-
-- Cursor `.cursorrules`: not in the current docs; counted as always loaded.
-- Codex MCP deferral: the docs name a "deferred" (tool search) surface and a per-server
-  `omit_tools_from`, but not the default. We assume all schemas load up front.
-- Cursor MCP deferral: not documented. We assume all schemas load up front.
-- Gemini CLI MCP: no deferral documented; tools are registered as function declarations.
-
-## Blocked
-
-Nothing. No task needed three failed attempts.
+| Agent       | Rules                                                    | Skills | Agents | MCP servers |
+| ----------- | -------------------------------------------------------- | ------ | ------ | ----------- |
+| Claude Code | CLAUDE.md family, rules, AGENTS.md fallback, auto memory | Yes    | Yes    | Yes         |
+| Codex CLI   | AGENTS.md chain with byte budget                         | Yes    | n/a    | Yes         |
+| Cursor      | `.mdc` rules by apply mode, AGENTS.md, `.cursorrules`    | n/a    | n/a    | Yes         |
+| Gemini CLI  | GEMINI.md (or configured names) with imports             | Yes    | n/a    | Yes         |
 
 ## Step 0: name and repository
 
-- `npm view ctx-receipt` returned 404, so the name is free. The near-identical names npm would
-  reject (`ctxreceipt`, `ctx_receipt`, `ctx.receipt`) are free too.
+- `npm view ctx-receipt` returned 404, so the name was free. The near-identical names npm would
+  reject (`ctxreceipt`, `ctx_receipt`, `ctx.receipt`) were free too.
 - `git init -b main`.
 
 ## M1: skeleton
 
-- TypeScript, ESM, Node 20+, built with tsup into `dist/cli.js`, tested with vitest, linted and
+- TypeScript, ESM, Node 20+, built with tsup into `dist/`, tested with vitest, linted and
   formatted with Biome, CLI flags with commander.
 - `--version` reads `package.json`, so the version lives in one place.
 - CI (`.github/workflows/ci.yml`): lint, typecheck, build, test on Node 20 and 22.
-- Decisions:
-  - **commander pinned to 14.** Version 15 requires Node 22.12+, which would break the Node 20
-    promise.
-  - **`@types/node` pinned to 20**, so the code cannot use APIs newer than the oldest supported
-    Node.
-  - **`.gitattributes` forces LF line endings.** With `core.autocrlf` on Windows, files were
-    checked out with CRLF, and Biome rejects those.
-- Known: a low-severity esbuild advisory (dev server only, dev dependency) cannot be fixed until
-  tsup allows esbuild 0.28.
+- **commander pinned to 14**: version 15 requires Node 22.12+.
+- **`@types/node` pinned to 20**, so the code cannot use APIs newer than the oldest supported Node.
+- **`.gitattributes` forces LF**: with `core.autocrlf` on Windows, files were checked out with CRLF,
+  which Biome rejects.
 
 ## M2: core and Claude Code rules
 
 - `types.ts`: one record per thing an agent loads:
-  `{ agent, kind, name, path, scope, loading, tokens, detail? }`.
-- `tokens.ts`: `estimateTokens()` wraps gpt-tokenizer with the `o200k_base` encoding. Every
-  output says the numbers are estimates and names the tokenizer.
-- `scan.ts` runs the adapters; `render/receipt.ts` prints the shop-receipt view.
-- CLI: `[path]`, `--agent`, `--no-user`, `--home`. Exit codes: 2 for usage errors, 3 for scan
-  errors.
-- Claude Code rules, checked against the official memory docs. These differ from the original
-  plan:
-  - `CLAUDE.md`, `.claude/CLAUDE.md`, and `CLAUDE.local.md` in the project and every parent
-    directory, plus `~/.claude/CLAUDE.md`.
-  - `.claude/rules/**/*.md` and `~/.claude/rules/**/*.md`. Rules with `paths:` frontmatter load
-    on demand.
-  - `AGENTS.md` is read when no CLAUDE.md exists in the project or above it.
-  - `@path` imports are followed up to 4 hops and skipped inside code spans and fenced blocks.
-  - Block-level HTML comments are removed before counting, as Claude Code does.
-- Color is used only when stdout is a terminal (picocolors alone turns it on in Windows pipes and
-  CI).
+  `{ agent, kind, name, path, scope, loading, tokens, detail?, fullTokens? }`.
+- `tokens.ts`: `estimateTokens()` wraps gpt-tokenizer. Every output says the numbers are
+  estimates and names the tokenizer.
+- `scan.ts` runs the adapters; `render/receipt.ts` prints the receipt.
+- Exit codes: 0 ok, 1 over budget, 2 usage error, 3 scan error.
+- Claude Code rules, checked against the official memory docs (several differ from the original
+  plan): `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md` in the project and every parent
+  folder; `~/.claude/CLAUDE.md`; `.claude/rules/` and `~/.claude/rules/` (rules with `paths:` load
+  on demand); `AGENTS.md` when no CLAUDE.md exists; `@path` imports up to 4 hops, skipped inside
+  code; block-level HTML comments removed before counting.
+- Color only when stdout is a terminal (picocolors alone turns it on in Windows pipes and CI).
 
 ## M3: skills
 
-- Shared `SKILL.md` reader (`src/skills.ts`). Each skill gives two records: its listing line
-  (always loaded) and its body (on demand).
-- Claude Code (checked against the skills docs):
-  - The listing is `name: description` plus `when_to_use`, capped at 1,536 characters. A missing
-    description falls back to the body's first line.
-  - `disable-model-invocation: true` means the description is never in context.
-  - Locations: `.claude/skills` from the project up to the git root, `~/.claude/skills`, skills
-    synced from claude.ai in `~/.claude/skills/synced/<account>/`, and legacy
-    `.claude/commands/**/*.md`.
-- Codex: name, description, and file path are listed. Locations: `.agents/skills` up to the git
-  root, and `~/.agents/skills`.
-- The receipt's on-demand section is grouped by agent, because the same skill can be installed
-  for two agents.
+- Shared `SKILL.md` reader (`src/skills.ts`). Each skill gives a listing line (always loaded) and
+  its body (on demand).
+- Claude Code: `name: description` plus `when_to_use`, cut at 1,536 characters; a missing
+  description falls back to the body's first line; `disable-model-invocation: true` hides the
+  listing. Locations: `.claude/skills` up to the git root, `~/.claude/skills`, skills synced from
+  claude.ai (`~/.claude/skills/synced/<account>/`), and `.claude/commands/`.
+- Codex: name, description, and file path. Locations: `.agents/skills` up to the git root, and
+  `~/.agents/skills`.
+- The on-demand section is grouped by agent, because the same skill can exist for two agents.
 
 ## M4: MCP servers, statically
 
 - `src/redact.ts` is the only code that reads configs that can hold MCP servers. It keeps each
-  server's name and transport and nothing else: no `env`, `args`, `headers`, URLs, or `command`.
-- A config that fails to parse produces `could not parse <path>` and exit code 3. Raw JSON and
-  TOML parser errors quote the file, which can include a key.
-- Claude Code servers: local scope (`~/.claude.json` under the project's path), `.mcp.json`, and
-  user scope. Local beats project beats user; `disabledMcpServers` and reserved names are skipped.
-- Leak tests (`test/redact.test.ts`): one fake key placed in every field a config allows, for
-  every agent, including inside `command` itself and in malformed files. The tests check stdout,
-  stderr, and scan records. A deliberately planted leak made them fail, so they have teeth.
-- An early version showed the server's program name (for example `npx`). It was removed, because
-  a config whose `command` is itself a key would have printed the key.
-- Found while checking the docs: Claude Code defers MCP tool schemas by default ("tool search"),
-  loading only tool names and server instructions up front. M6 must count that correctly.
+  server's name and transport and nothing else.
+- A config that fails to parse gives `could not parse <path>` and exit 3; raw JSON and TOML errors
+  quote the file, which can include a key.
+- Claude Code servers: local scope (`~/.claude.json`, per project), `.mcp.json`, and user scope;
+  local beats project beats user; `disabledMcpServers` and reserved names are skipped.
+- Leak tests (`test/redact.test.ts`) plant one fake key in every field of every config format and
+  check stdout, stderr, written files, and scan records. Planting a real leak made them fail.
+- An early version showed the server's program name. It was removed: a config whose `command` is
+  itself a key would have printed the key.
 
 ## M5: Codex, Cursor, Gemini CLI
 
-Each adapter was checked against the agent's current docs and committed separately.
+Each adapter was checked against the agent's docs and committed separately.
 
-- **Codex:** `~/.codex/AGENTS.override.md` or `AGENTS.md`. From the git root down, one file per
-  directory (`AGENTS.override.md`, `AGENTS.md`, then `project_doc_fallback_filenames`). Project
-  files share a 32 KiB budget (`project_doc_max_bytes`); the docs describe this cap both per file
-  and combined, and we follow the combined description. MCP from `[mcp_servers.*]` in user and
-  project `config.toml`, closest file wins, `enabled = false` honored. Skills turned off with
-  `[[skills.config]]` are skipped.
-- **Cursor:** only `.mdc` files in `.cursor/rules` count. `alwaysApply: true` is always loaded; a
-  description-only rule pre-loads its name and description; glob-only and manual rules are on
-  demand. `AGENTS.md` in the project root. `.cursorrules` is no longer documented, so it is
-  counted but marked "legacy, unverified". MCP from `.cursor/mcp.json` and `~/.cursor/mcp.json`.
-  Frontmatter is read line by line, because Cursor allows things like `globs: *.ts` that are not
-  valid YAML.
-- **Gemini CLI:** `context.fileName` (one name or a list), `~/.gemini/<name>`, and the project and
-  parents up to the first `.git`. `@path` imports up to 5 levels. Skills from `.agents/skills` and
-  `.gemini/skills` in the project and home, with name precedence and `skills.disabled`. MCP:
-  `httpUrl` is HTTP, `url` is SSE, `command` is stdio; `mcp.excluded` and `mcp.allowed` honored.
-  `settings.json` allows comments, so a small comment stripper was added instead of a new
-  dependency.
-- Shared Markdown helpers moved to `src/markdown.ts`.
-- `docs/adding-an-agent.md` written from what each adapter taught.
+- **Codex:** `~/.codex/AGENTS.override.md` or `AGENTS.md`; from the git root down, one file per
+  folder (`AGENTS.override.md`, `AGENTS.md`, `project_doc_fallback_filenames`); a shared 32 KiB
+  `project_doc_max_bytes` budget (the docs describe it both per file and combined; we follow the
+  combined description). MCP from `[mcp_servers.*]` in user and project `config.toml`, closest
+  wins, `enabled = false` honored. Skills turned off with `[[skills.config]]` are skipped.
+- **Cursor:** only `.mdc` in `.cursor/rules`; `alwaysApply: true` always; description-only rules
+  pre-load name and description; glob-only and manual rules on demand. `AGENTS.md` in the
+  project root. `.cursorrules` counted but marked "legacy, unverified". MCP from
+  `.cursor/mcp.json` and `~/.cursor/mcp.json`. Frontmatter is read line by line, because Cursor
+  allows `globs: *.ts`, which is not valid YAML.
+- **Gemini CLI:** `context.fileName` (one name or a list), `~/.gemini/<name>`, project and parents
+  up to the first `.git`; imports up to 5 levels; skills from `.agents/skills` and
+  `.gemini/skills` with name precedence and `skills.disabled`; MCP `httpUrl` is HTTP, `url` is
+  SSE, `command` is stdio, with `mcp.excluded` and `mcp.allowed`. `settings.json` allows comments,
+  so a small comment stripper was written instead of adding a dependency.
+- Shared helpers: `src/fs.ts`, `src/markdown.ts`. `docs/adding-an-agent.md` written.
+- **Agents that are not installed:** if `~/.claude`, `~/.codex`, `~/.cursor`, or `~/.gemini` is
+  missing, that agent's home files are skipped and its project files still count; `--agent`
+  overrides this. Shared folders such as `~/.agents/skills` had made absent agents appear.
+- **Bug fixed:** when home is a parent of the project, `~/.claude/CLAUDE.md` was treated as a
+  project file, which switched off the AGENTS.md fallback and loaded even with `--no-user`.
 
-## After M5: agents that are not installed
+## M6: `--mcp`
 
-- If an agent's config folder (`~/.claude`, `~/.codex`, `~/.cursor`, `~/.gemini`) is missing,
-  its home files are skipped but its project files still count. `--agent <name>` overrides this.
-  Reason: shared folders such as `~/.agents/skills` made agents appear that the user does not
-  have.
-- Bug fixed along the way: when home is a parent of the project, `~/.claude/CLAUDE.md` was treated
-  as a project file. It switched off the AGENTS.md fallback and was loaded even with `--no-user`.
+- `@modelcontextprotocol/sdk` added (it brings server-side packages too; only the client is used)
+  and loaded only with `--mcp`, because it roughly tripled start-up time.
+- `src/mcp/launch.ts` is the only code that reads `command`, `args`, and `env`, and only to spawn.
+  Server stderr is discarded. Each server has 10 s, then is shut down (stdin closed, SIGTERM,
+  SIGKILL). `src/mcp/measure.ts` turns tool lists into numbers; tool text never reaches records.
+- Before launching, `--mcp` prints agent, server name, transport, and config file, never the
+  command. Failures say only "failed to start" or "timed out", because spawn errors name the
+  command. `--mcp <name>` starts one server.
+- Servers get the SDK's safe default environment plus their config `env`, with `${VAR}`,
+  `${VAR:-default}`, and `${env:VAR}` expanded (Codex forwards `env_vars` instead).
+- Two numbers per server: **up front** (counts toward the total) and **all schemas, if loaded**.
+  Claude Code defers schemas by default (names and instructions up front); `ENABLE_TOOL_SEARCH`
+  `false`/`auto`, server `alwaysLoad`, and tool `_meta["anthropic/alwaysLoad"]` load them up
+  front. Codex, Cursor, Gemini CLI: up front = all schemas. Codex and Gemini tool allow and deny
+  lists are applied.
+- Tests use only `test/fixtures/mcp/fake-server.mjs` (echoes env and args into stderr and a tool
+  description; can hang and ignore SIGTERM). A hanging server times out and is killed.
 
-## Not counted yet
+## M7: outputs, grade, caps
+
+- `src/grade.ts`: `summarize()` feeds every output. The grade uses the heaviest agent's
+  always-loaded tokens; the cut-offs (A <5k, B <15k, C <30k, D <60k) are our own opinion.
+- `--json` replaces the receipt on stdout; `--md <file>` and `--svg <file>` write files in
+  addition. These are the only files the tool writes, and only where the user points them.
+- JSON and Markdown name files project-relative or with `~/`, never as absolute paths.
+- The SVG card shows per-agent totals and counts only, with no file or server names, and draws
+  its own opaque background, so it reads the same on light and dark pages (checked in a browser).
+- `--budget <tokens>` checks the total always loaded across the agents shown; exit 1 when over.
+- Skill listing caps: Claude Code `skillListingBudgetFraction` of the window (default 1%), Codex
+  2% or `skills.max_context_tokens` (at most 10,000). Over the cap, names are kept and each
+  description share is scaled down; lines are marked "listing cap".
+
+## M8: documentation and release setup
+
+- README, `docs/how-we-count.md`, CONTRIBUTING, issue templates (bug, new agent), CHANGELOG.
+- `examples/demo` (a small project and fake home) is the README example. A test checks that the
+  README's example receipt is exactly what the CLI prints, and that every flag is documented.
+- `examples/demo` is excluded from Biome: Biome formats Markdown, which would change token counts.
+- Release workflow: on a `v*` tag, lint, typecheck, build, test, check the tag matches
+  package.json, and publish with provenance (skipped when the version is already on npm).
+
+## M9: release dry run
+
+- `npm pack`: 6 files (LICENSE, README, package.json, `dist/`). Installed into an empty folder,
+  the tarball printed the same receipt as the repo build; every output and exit code worked; the
+  secrets fixture leaked nothing; no fake-server process was left running.
+- `npx <bare Windows path to .tgz>` silently runs nothing (an npx quirk); `npx file:<path>` works.
+- CI now packs, installs, and runs the tarball on Linux with Node 20 and 22.
+
+## Releasing 0.1.0
+
+- Commit author email rewritten on all commits to the GitHub private address (files unchanged),
+  force-pushed while the repository was still private; then the repository was made public.
+- npm required two-factor authentication on the account. The command-line route
+  (`npm profile enable-2fa`) was refused; it was turned on in the website (security key,
+  "auth-and-writes").
+- npm staged the first upload (a `0.0.0-stage` placeholder) until 0.1.0 was released from
+  "Staged Packages". Live 0.1.0 matched the local build; `npx ctx-receipt` worked from an empty
+  folder.
+- PowerShell 5.1 does not accept `&&`; commands for the user's terminal must be one per line.
+
+## Comparing with Claude Code's `/context`
+
+Run on a real project with `claude -p "/context"` (Claude Code 2.1.322, 1M-token model). Git Bash
+rewrites `/context` into a Windows path unless `MSYS_NO_PATHCONV=1` is set.
+
+| Category              | `/context` | ctx-receipt 0.1.0 | Ratio |
+| --------------------- | ---------: | ----------------: | ----: |
+| User CLAUDE.md        |        190 |               121 |  1.57 |
+| Project CLAUDE.md     |      1,800 |             1,135 |  1.59 |
+| 24 skills, one by one |      2,030 |             1,258 |  1.61 |
+
+Findings: Claude's tokenizer counts about 1.6 times `o200k_base`; the 200k window assumption
+under-capped skills on a 1M model; custom agents and auto memory were not counted; plugin and
+built-in skills, and Claude Code's own system prompt and tools (about 14k), are not read by
+design. Full details in `docs/how-we-count.md`.
+
+## 0.1.1
+
+- **Custom agents** counted: `.claude/agents/` up to the git root and `~/.claude/agents/`, the
+  `- name: description (Tools: ...)` line only (the body loads only in the agent's own context).
+  Files Claude Code skips are skipped. Agent files can define MCP servers inline with keys; only
+  `name`, `description`, and `tools` are read.
+- **Auto memory** counted: first 200 lines or 25 KB of
+  `~/.claude/projects/<repo root with non-alphanumerics as "-">/memory/MEMORY.md`, unless
+  `autoMemoryEnabled` is false or `CLAUDE_CODE_DISABLE_AUTO_MEMORY` is set.
+- **`--window <tokens>`**: sets percentages and listing caps; the default stays 200k, so existing
+  output only gains new lines.
+- **Claude-tokenizer figure**: `~N in Claude's tokenizer (x1.6, rough)` under Claude Code's
+  subtotal; totals, budgets, and grades stay raw. JSON adds `contextWindow`,
+  `claudeTokenizerFactor`, `claudeTokenizerEstimate`, and a `subagents` count.
+- After the fix, on the same project: agents 246 (about 394 at 1.6) against 358 in `/context`;
+  auto memory 37 (about 59) against 60.
+
+## Problems hit and how they were solved
+
+- **Lock file broke CI twice.** On Windows, `npm install <package>` with an existing
+  `node_modules` drops optional packages only Linux needs (`@emnapi/core`, `@emnapi/runtime`).
+  Fix: delete `node_modules` and `package-lock.json`, run `npm install`, check `@emnapi/core` is in
+  the lock file. Written into CONTRIBUTING.
+- **Flaky CLI test.** Three CLI spawns in one 5 s budget failed under load once MCP tests ran in
+  parallel. Split into one spawn per test and set `testTimeout` to 15 s; no assertion changed.
+- **A hidden lint failure.** Filtered output once hid a Biome error on a new Markdown file. All
+  checks are now judged by exit codes.
+- **Slow start-up.** The MCP SDK tripled start-up time; it is now imported only with `--mcp`.
+
+## Unverified
+
+- Cursor `.cursorrules`: no longer in the docs; counted as always loaded.
+- Codex MCP deferral: the docs mention a "deferred" (tool search) surface and per-server
+  `omit_tools_from` but not the default. We assume all schemas load up front.
+- Cursor MCP deferral: not documented. We assume all schemas load up front.
+- Gemini CLI MCP: no deferral documented; tools are registered as function declarations.
+- The 1.6 Claude-tokenizer factor comes from one project and one model.
+
+## Not counted
 
 Each adapter's header comment lists these too.
 
-- Claude Code: managed policy files, auto memory (`MEMORY.md`), subdirectory CLAUDE.md and skills,
-  plugin and bundled skills, plugin and claude.ai MCP servers, `managed-mcp.json`, `.mcp.json`
+- Every agent's own system prompt and built-in tools.
+- Claude Code: managed policy files, CLAUDE.md and skills in subfolders (on demand), plugin and
+  built-in skills and agents, plugin and claude.ai MCP servers, `managed-mcp.json`, `.mcp.json`
   approval settings.
 - Codex: `CODEX_HOME`, `/etc/codex/skills`, bundled skills, profiles, project trust.
-- Cursor: User Rules and Team Rules (not stored in files), servers toggled off in the app.
+- Cursor: User Rules and Team Rules (stored in the app), servers toggled off in the app.
 - Gemini CLI: system settings files, extensions, built-in skills, `context.includeDirectories`.
-- All agents: the overall skill listing budget (Claude Code 1% of the window, Codex 2%), which
-  can drop descriptions when many skills are installed. Our "always" number can be higher than
-  what the agent really sends in that case.
+
+## Known issues
+
+- A low-severity esbuild advisory (dev server only, dev dependency) cannot be fixed until tsup
+  allows esbuild 0.28.
+- npm caches package metadata locally; right after a release, `npx ctx-receipt` on the publishing
+  machine may need `--prefer-online`.
 
 ## How to try it
 
 ```bash
-npm install
-npm run build
-npm test
-node dist/cli.js                 # this folder plus your home config
-node dist/cli.js path/to/repo --no-user
+npx ctx-receipt                                   # from npm
+npm install && npm run build && npm test          # from a clone
+node dist/cli.js examples/demo/project --home examples/demo/home
 node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 ```
 
+## Releasing a new version
+
+1. Update the code, the CHANGELOG, and the version in `package.json`.
+2. If a dependency changed, regenerate the lock file from a clean install (see above).
+3. Run `npm run lint`, `npm run typecheck`, `npm run build`, `npm test`; push and wait for CI.
+4. `npm publish --access public`, approved with the security key; release it from "Staged
+   Packages" on npmjs.com if npm stages it.
+5. Tag and push: `git tag -a vX.Y.Z -m "ctx-receipt X.Y.Z"` then `git push origin vX.Y.Z`.
+
 ## Left for you
 
-- Compare the tool's numbers against Claude Code's `/context` in a real project. Expect ours to
-  be lower: `/context` uses Claude's tokenizer and includes the system prompt, built-in tools,
-  and wrapping text we do not count. The comparison tells us how far off the estimate is.
-- Run `--mcp` against your own servers once, knowing it starts the commands in your config.
-  Tests and checks here only ever started the fixture server.
-- Check the Codex and Cursor MCP deferral behaviour in the apps themselves (marked unverified).
-- Done: commit email switched to the GitHub private address.
-- Done: repository public, 0.1.0 published, `v0.1.0` tagged.
-- For automated releases later: add an `NPM_TOKEN` secret (a granular token allowed to publish)
-  so the tag workflow can publish; until then, publish by hand with `npm publish`.
-- Done: `author` set to Jenoyrex.
+- Run `--mcp` on your own servers once, knowing it starts the commands in your config. Every
+  check here started only the fixture server.
+- Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
+- Check Codex's and Cursor's MCP deferral in the apps themselves (marked unverified).
+- For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish) so the
+  tag workflow can publish. Until then, publish by hand.

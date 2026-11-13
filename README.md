@@ -23,19 +23,27 @@ own tokenizer gives different numbers. See [How we count](docs/how-we-count.md).
 - **One view across agents.** Claude Code, Codex CLI, Cursor, and Gemini CLI side by side.
 - **Works before you start a session**, and in CI, so a growing `CLAUDE.md` or a new MCP server
   shows up in a pull request instead of in a slow, forgetful session.
-- **Counts everything that pre-loads**: rules files and their imports, skill listings, and MCP
-  tools, each split into what is always loaded and what loads only on demand.
+- **Counts everything that pre-loads**: rules files and their imports, skill listings, custom
+  agents, auto memory, and MCP tools, each split into what is always loaded and what loads only
+  on demand.
+- **Checked against reality.** We compared it with Claude Code's own `/context` on a real
+  project; the receipt shows a rough Claude-tokenizer figure based on that comparison.
 - **Shareable.** Write a receipt card with `--svg`, a report with `--md`, or JSON with `--json`.
+- **Safe with secrets.** MCP configs hold API keys; ctx-receipt never prints them, and its tests
+  prove it.
 
 ## Contents
 
 - [Quick start](#quick-start)
+- [Install](#install)
 - [Example](#example)
 - [What it counts](#what-it-counts)
 - [MCP servers and `--mcp`](#mcp-servers-and---mcp)
+- [Outputs](#outputs)
 - [Options](#options)
 - [Use in CI](#use-in-ci)
 - [Supported agents](#supported-agents)
+- [Privacy and safety](#privacy-and-safety)
 - [FAQ](#faq)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
@@ -60,6 +68,15 @@ npx ctx-receipt --window 1000000      # your model has a 1M-token context window
 Requires Node.js 20 or later. ctx-receipt itself makes no network calls, collects no telemetry,
 needs no account, and never changes your files. (With `--mcp` it starts your MCP servers, and
 those may use the network.)
+
+## Install
+
+`npx ctx-receipt` needs no install. To keep it around:
+
+```sh
+npm install --global ctx-receipt     # then run: ctx-receipt
+npm install --save-dev ctx-receipt   # per project, for scripts and CI
+```
 
 ## Example
 
@@ -191,6 +208,54 @@ MCP configs often hold API keys. ctx-receipt reads only the server name and tran
 for the report; the launcher reads the command and environment only to start the server. Tests
 check that a fake key planted in every field of every config format never reaches any output.
 
+## Outputs
+
+| Output   | How                                        | Shows                                                                                                                       |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Receipt  | default, on stdout                         | Every item, subtotals, on-demand section, total, grade                                                                      |
+| JSON     | `--json`, on stdout instead of the receipt | Everything, for scripts and CI                                                                                              |
+| Markdown | `--md report.md`, in addition              | A summary table and one table per agent                                                                                     |
+| SVG card | `--svg receipt.svg`, in addition           | Per-agent totals and the grade, like the image above. No file or server names, so nothing private ends up in a shared image |
+
+An excerpt of `--json` for the example above:
+
+```json
+{
+  "tool": "ctx-receipt",
+  "version": "0.1.1",
+  "estimate": true,
+  "tokenizer": "o200k_base via gpt-tokenizer",
+  "contextWindow": 200000,
+  "grade": "A",
+  "heaviestAgent": "claude-code",
+  "totalAlwaysLoaded": 248,
+  "agents": [
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "alwaysLoaded": 167,
+      "onDemand": 69,
+      "claudeTokenizerEstimate": 267
+    }
+  ],
+  "items": [
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "CLAUDE.md",
+      "file": "CLAUDE.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 69
+    }
+  ]
+}
+```
+
+The full report also has per-agent counts (rules, skills, agents, MCP servers), the grade
+cut-offs, and every item. File names are relative to the project or start with `~/`; absolute
+paths never appear.
+
 ## Options
 
 | Option              | What it does                                                         |
@@ -233,17 +298,30 @@ loaded is over the budget. Add `--json > ctx-receipt.json` to keep a machine-rea
 
 ## Supported agents
 
-Each adapter was written from the agent's official documentation, checked on 2026-11-12.
+Each adapter was written from the agent's official documentation, checked on 2026-11-12 and
+2026-11-13. Claude Code was also compared with its own `/context` on a real project.
 
-| Agent       | Rules                                                          | Skills                  | MCP config | MCP up-front cost                   |
-| ----------- | -------------------------------------------------------------- | ----------------------- | ---------- | ----------------------------------- |
-| Claude Code | verified                                                       | verified                | verified   | verified (deferred by default)      |
-| Codex CLI   | verified                                                       | verified                | verified   | **unverified**: assumed all schemas |
-| Cursor      | verified; `.cursorrules` **unverified** (no longer documented) | not supported by Cursor | verified   | **unverified**: assumed all schemas |
-| Gemini CLI  | verified                                                       | verified                | verified   | all schemas; no deferral documented |
+| Agent       | Rules                                                          | Skills                  | Custom agents and memory | MCP config | MCP up-front cost                   |
+| ----------- | -------------------------------------------------------------- | ----------------------- | ------------------------ | ---------- | ----------------------------------- |
+| Claude Code | verified, compared with `/context`                             | verified                | verified                 | verified   | verified (deferred by default)      |
+| Codex CLI   | verified                                                       | verified                | n/a                      | verified   | **unverified**: assumed all schemas |
+| Cursor      | verified; `.cursorrules` **unverified** (no longer documented) | not supported by Cursor | n/a                      | verified   | **unverified**: assumed all schemas |
+| Gemini CLI  | verified                                                       | verified                | n/a                      | verified   | all schemas; no deferral documented |
 
 Where the docs disagree or say nothing, we take the reading that counts more, and say so in
 the adapter's source and in [How we count](docs/how-we-count.md).
+
+## Privacy and safety
+
+- **Local only.** No network calls, no telemetry, no account. Nothing leaves your machine.
+- **Read-only.** It never changes your files. It writes only the files you name with `--md` and
+  `--svg`.
+- **Secrets stay secret.** From MCP configs it keeps only server names and transports. Commands,
+  arguments, environment variables, URLs, and headers are never printed or written, and config
+  parse errors are reported without quoting the file. A test plants a fake key in every field of
+  every config format and checks that it never reaches any output.
+- **Starts nothing by default.** MCP servers are started only with `--mcp`, and the list of
+  servers is printed before any of them starts.
 
 ## FAQ
 
@@ -298,7 +376,8 @@ D under 60k, F above. The cut-offs are our own opinion, a prompt to look rather 
 ## Contributing
 
 Bug reports and new agents are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and
-[Adding an agent](docs/adding-an-agent.md).
+[Adding an agent](docs/adding-an-agent.md). What changed in each release is in the
+[CHANGELOG](CHANGELOG.md).
 
 ## License
 
