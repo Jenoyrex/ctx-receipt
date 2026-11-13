@@ -1,0 +1,6 @@
+---
+description: Conventions for API route handlers
+alwaysApply: false
+---
+- Validate every request body with zod.
+- Return `{ error: { code, message } }` on failure.

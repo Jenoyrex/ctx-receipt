@@ -1,7 +1,27 @@
 {
   "name": "ctx-receipt",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "See what your AI coding agent loads into context before you type a word. A token receipt for your rules files, skills, and MCP servers.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "mcp",
+    "context-window",
+    "tokens",
+    "llm",
+    "agents",
+    "cli"
+  ],
+  "homepage": "https://github.com/Jenoyrex/ctx-receipt#readme",
+  "bugs": {
+    "url": "https://github.com/Jenoyrex/ctx-receipt/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jenoyrex/ctx-receipt.git"
+  },
   "license": "MIT",
   "type": "module",
   "bin": {

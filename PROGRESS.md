@@ -15,7 +15,7 @@ original plan (Step 0, M1 to M9). Last updated 2026-11-12.
 | M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done        |
 | M6        | `--mcp` live measurement                                                | Done        |
 | M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Done        |
-| M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Not started |
+| M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Done        |
 | M9        | Release dry run with `npm pack`                                         | Not started |
 
 Current checks: lint, typecheck, and build pass; 79 tests in 11 files pass. Earlier: 61 tests (three runs in a
@@ -23,11 +23,8 @@ row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
 
 ## Now
 
-M7: one `summarize()` (per-agent totals, worst agent, grade) in `src/grade.ts` feeds every
-output. Add `--json` (stdout), `--md <file>`, `--svg <file>` (an opaque receipt card with agent
-totals only, no file names, so no home paths), `--budget <tokens>` (exit 1 when over), and the
-grade line on the receipt. Apply each agent's skill listing cap (Claude Code 1%, Codex 2% of a
-200k window). Every format goes into the leak test's `FORMATS` list.
+M9: `npm pack`, install the tarball in a fresh temp folder, run it against the demo and the test
+fixtures (with `--home` pointing at fixtures, never the real home), and fix anything broken.
 
 ## Decisions (M6 to M9)
 
@@ -77,6 +74,19 @@ grade line on the receipt. Apply each agent's skill listing cap (Claude Code 1%,
   TOTAL line), as the plan says. Exit 1 when over; the report still prints. Use `--agent` to
   budget one agent. A value that is not a whole number exits 2.
 - The grade uses the heaviest agent's always-loaded tokens (cut-offs in `src/grade.ts`).
+- Version set to 0.1.0 (the first release), with repository, homepage, bugs, and keywords in
+  package.json. No author field: that is yours to add if you want it.
+- The README example comes from `examples/demo` (a small project and a fake home). The example
+  receipt in the README was compared with a real run character for character. Every other README
+  command was run against the demo with `--home examples/demo/home`, and the exit codes (0, 1, 2,
+  3) matched. `npx ctx-receipt` itself cannot run until the package is published; M9 runs the
+  same CLI from the packed tarball instead.
+- `examples/demo` is excluded from Biome: Biome formats Markdown, which would change the demo
+  files' token counts and break the README example.
+- `docs/how-we-count.md` written; it states the grade cut-offs are our own opinion.
+- The release workflow publishes on a `v*` tag with npm provenance, after lint, typecheck, build,
+  tests, and a check that the tag matches package.json. It needs an `NPM_TOKEN` repository
+  secret. No tag was created.
 
 ## Unverified
 
