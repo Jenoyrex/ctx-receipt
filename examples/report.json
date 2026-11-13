@@ -1,10 +1,11 @@
 {
   "tool": "ctx-receipt",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "estimate": true,
   "note": "All token counts are estimates; each agent's own tokenizer differs.",
   "tokenizer": "o200k_base via gpt-tokenizer",
   "contextWindow": 200000,
+  "claudeTokenizerFactor": 1.6,
   "grade": "A",
   "gradeCutoffs": {
     "A": 5000,
@@ -30,11 +31,16 @@
         "count": 1,
         "tokens": 17
       },
+      "subagents": {
+        "count": 0,
+        "tokens": 0
+      },
       "mcp": {
         "count": 1,
         "tokens": 0,
         "unmeasured": 1
-      }
+      },
+      "claudeTokenizerEstimate": 267
     },
     {
       "id": "codex",
@@ -48,6 +54,10 @@
         "tokens": 41
       },
       "skills": {
+        "count": 0,
+        "tokens": 0
+      },
+      "subagents": {
         "count": 0,
         "tokens": 0
       },
@@ -69,6 +79,10 @@
         "tokens": 40
       },
       "skills": {
+        "count": 0,
+        "tokens": 0
+      },
+      "subagents": {
         "count": 0,
         "tokens": 0
       },

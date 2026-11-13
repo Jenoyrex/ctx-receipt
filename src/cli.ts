@@ -31,6 +31,7 @@ interface Options {
   md?: string;
   svg?: string;
   budget?: string;
+  window?: string;
 }
 
 const program = new Command()
@@ -49,6 +50,10 @@ const program = new Command()
   .option("--md <file>", "also write a Markdown report")
   .option("--svg <file>", "also write a shareable SVG receipt card")
   .option("--budget <tokens>", "exit 1 if the always-loaded total is over <tokens>")
+  .option(
+    "--window <tokens>",
+    "context window size for percentages and listing caps (default: 200000)",
+  )
   .exitOverride((err) => process.exit(err.exitCode === 0 ? 0 : USAGE))
   .action(async (path: string, opts: Options) => {
     const project = resolve(path);
@@ -60,8 +65,14 @@ const program = new Command()
       fail(USAGE, `--budget needs a whole number of tokens, got "${opts.budget}"`);
     }
 
+    const window = opts.window === undefined ? undefined : Number(opts.window);
+    if (window !== undefined && !(Number.isInteger(window) && window > 0)) {
+      fail(USAGE, `--window needs a whole number of tokens, got "${opts.window}"`);
+    }
+
     const ctx: ScanContext = {
       project,
+      window,
       home: resolve(opts.home ?? homedir()),
       includeUser: opts.user,
     };
@@ -91,7 +102,7 @@ const program = new Command()
     } else {
       // picocolors alone enables color on Windows and in CI even when piped; also require a TTY.
       const color = pc.isColorSupported && process.stdout.isTTY === true;
-      process.stdout.write(renderReceipt(items, { color }));
+      process.stdout.write(renderReceipt(items, { color, window }));
     }
     try {
       if (opts.md) writeFileSync(opts.md, renderMarkdown(items, ctx));

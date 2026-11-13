@@ -1,4 +1,4 @@
-export type Kind = "rules" | "skill" | "mcp-server" | "mcp-tool";
+export type Kind = "rules" | "skill" | "agent" | "mcp-server" | "mcp-tool";
 export type Scope = "project" | "user";
 export type Loading = "always" | "on-demand" | "unmeasured";
 
@@ -24,6 +24,8 @@ export interface ScanContext {
   home: string;
   /** False with --no-user: skip everything under `home`. */
   includeUser: boolean;
+  /** Context window in tokens (--window). Default: CONTEXT_WINDOW. */
+  window?: number;
 }
 
 export interface Adapter {

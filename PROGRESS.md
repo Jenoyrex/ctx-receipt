@@ -113,6 +113,13 @@ Release notes:
 - CI now also packs, installs the tarball in an empty folder, and runs it on Linux with Node 20
   and 22, because the local dry run could only use Node 25 on Windows.
 
+- 0.1.1, after comparing with Claude Code's `/context` on a real project (details in
+  `docs/how-we-count.md`): custom agents and auto memory are counted; `--window` sets the window
+  (default unchanged at 200k, so existing output only gains the new lines); the receipt shows a
+  rough Claude-tokenizer figure (x1.6) that never feeds totals, budgets, or grades. Agent files
+  can define MCP servers inline with keys in `env`; only `name`, `description`, and `tools` are
+  read from them.
+
 ## Unverified
 
 - Cursor `.cursorrules`: not in the current docs; counted as always loaded.

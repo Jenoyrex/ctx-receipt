@@ -24,10 +24,20 @@
 //   The same name in several scopes connects once (local > project > user). Servers in the
 //   project entry's disabledMcpServers and reserved built-in names are skipped.
 //
-// Not counted yet: managed policy files, auto memory (MEMORY.md), subdirectory CLAUDE.md and
-// skills, plugin skills, bundled skills, and the listing's overall budget (1% of the window),
-// which can drop descriptions when there are many skills. MCP from plugins, claude.ai
-// connectors, managed-mcp.json, and .mcp.json approvals (disabledMcpjsonServers etc.).
+// Custom agents (verified 2026-11-13 against https://code.claude.com/docs/en/sub-agents):
+//   .claude/agents/**/*.md from the project dir up to the git root (closest wins by name),
+//   then ~/.claude/agents/**/*.md. Files without a valid `name` and `description` are skipped.
+//   Only the listing line ("- name: description (Tools: ...)") is in the main context; the body
+//   is the agent's own system prompt and loads only in the agent's separate context.
+//
+// Auto memory (memory docs): the first 200 lines or 25 KB of
+//   ~/.claude/projects/<repo root, every non-alphanumeric character as "-">/memory/MEMORY.md,
+//   unless autoMemoryEnabled is false or CLAUDE_CODE_DISABLE_AUTO_MEMORY is set. The folder name
+//   was confirmed against real folders (E:\PATA -> E--PATA).
+//
+// Not counted yet: managed policy files, subdirectory CLAUDE.md and skills, plugin and bundled
+// skills and agents, MCP from plugins, claude.ai connectors, managed-mcp.json, and .mcp.json
+// approvals (disabledMcpjsonServers etc.).
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
@@ -44,7 +54,7 @@ import {
   str,
   truthy,
 } from "../skills.js";
-import { CONTEXT_WINDOW, estimateTokens } from "../tokens.js";
+import { estimateTokens, windowOf } from "../tokens.js";
 import type { Adapter, Item, Loading, Scope } from "../types.js";
 
 const AGENT = "claude-code";
@@ -150,7 +160,48 @@ export const claudeCode: Adapter = {
       : null;
     const fraction = isObject(settings) ? settings.skillListingBudgetFraction : undefined;
     const share = typeof fraction === "number" && fraction > 0 && fraction <= 1 ? fraction : 0.01;
-    capSkillListing(items, CONTEXT_WINDOW * share);
+    capSkillListing(items, windowOf(ctx) * share);
+
+    // Custom agents: project dirs closest first, then user; the first definition of a name wins.
+    const agentNames = new Set<string>();
+    const loadAgents = (dir: string, scope: Scope) => {
+      for (const path of listMarkdown(dir)) {
+        const def = parseAgent(readFileSync(path, "utf8"));
+        if (!def || agentNames.has(def.name)) continue;
+        agentNames.add(def.name);
+        items.push({
+          agent: AGENT,
+          kind: "agent",
+          name: def.name,
+          path,
+          scope,
+          loading: "always",
+          tokens: estimateTokens(`- ${def.name}: ${def.description} (Tools: ${def.tools})`),
+        });
+      }
+    };
+    for (const d of repoDirs(ctx.project).reverse())
+      loadAgents(join(d, ".claude", "agents"), "project");
+    if (ctx.includeUser) loadAgents(join(ctx.home, ".claude", "agents"), "user");
+
+    // Auto memory: the start of MEMORY.md for this repository.
+    if (ctx.includeUser && autoMemoryOn(ctx.project, settings)) {
+      const root = repoDirs(ctx.project)[0];
+      const key = root.replace(/[^a-zA-Z0-9]/g, "-");
+      const path = join(ctx.home, ".claude", "projects", key, "memory", "MEMORY.md");
+      if (isFile(path)) {
+        const text = memoryStart(readFileSync(path, "utf8"));
+        items.push({
+          agent: AGENT,
+          kind: "rules",
+          name: "auto memory (MEMORY.md)",
+          path,
+          scope: "user",
+          loading: "always",
+          tokens: estimateTokens(text),
+        });
+      }
+    }
 
     // MCP servers, in precedence order so the first definition of a name wins.
     const servers = new Map<string, Item>();
@@ -175,6 +226,50 @@ export const claudeCode: Adapter = {
     return items;
   },
 };
+
+/** A subagent definition Claude Code would load, or null for a file it skips. */
+export function parseAgent(
+  raw: string,
+): { name: string; description: string; tools: string } | null {
+  if (!/^---\r?\n/.test(raw)) return null;
+  let data: Record<string, unknown>;
+  try {
+    data = matter(raw).data;
+  } catch {
+    return null;
+  }
+  const name = str(data.name);
+  const description = str(data.description);
+  if (!name || !description || name.startsWith("-") || name.includes(":") || name.length > 256) {
+    return null;
+  }
+  const tools = Array.isArray(data.tools)
+    ? data.tools.filter((t) => typeof t === "string").join(", ")
+    : str(data.tools);
+  return { name, description, tools: tools || "*" };
+}
+
+/** Claude Code loads the first 200 lines of MEMORY.md, or the first 25 KB if that comes first. */
+export function memoryStart(text: string): string {
+  const lines = text.split("\n").slice(0, 200).join("\n");
+  const bytes = Buffer.from(lines, "utf8");
+  return bytes.length > 25 * 1024 ? bytes.subarray(0, 25 * 1024).toString("utf8") : lines;
+}
+
+/** autoMemoryEnabled: local project settings beat project settings beat user settings. */
+function autoMemoryOn(project: string, userSettings: unknown): boolean {
+  if (truthy(process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY)) return false;
+  for (const config of [
+    readJsonConfig(join(project, ".claude", "settings.local.json")),
+    readJsonConfig(join(project, ".claude", "settings.json")),
+    userSettings,
+  ]) {
+    if (isObject(config) && typeof config.autoMemoryEnabled === "boolean") {
+      return config.autoMemoryEnabled;
+    }
+  }
+  return true;
+}
 
 const RESERVED_MCP_NAMES = new Set([
   "workspace",

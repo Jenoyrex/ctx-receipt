@@ -100,6 +100,7 @@ function lines(a: AgentSummary): [string, string][] {
   const out: [string, string][] = [];
   if (a.rules.count > 0) out.push([`rules (${a.rules.count} files)`, fmt(a.rules.tokens)]);
   if (a.skills.count > 0) out.push([`skills (${a.skills.count})`, fmt(a.skills.tokens)]);
+  if (a.subagents.count > 0) out.push([`agents (${a.subagents.count})`, fmt(a.subagents.tokens)]);
   if (a.mcp.count > 0) {
     const measured = a.mcp.count - a.mcp.unmeasured;
     const value = measured > 0 ? fmt(a.mcp.tokens) : "?";

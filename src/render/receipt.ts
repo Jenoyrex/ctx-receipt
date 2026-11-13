@@ -1,13 +1,14 @@
 import { createColors } from "picocolors";
 import { adapters } from "../adapters/index.js";
 import { summarize } from "../grade.js";
-import { TOKENIZER, CONTEXT_WINDOW as WINDOW } from "../tokens.js";
+import { CLAUDE_TOKENIZER_FACTOR, CONTEXT_WINDOW, TOKENIZER } from "../tokens.js";
 import type { Item } from "../types.js";
 
 const WIDTH = 52;
 
-export function renderReceipt(items: Item[], opts: { color: boolean }): string {
+export function renderReceipt(items: Item[], opts: { color: boolean; window?: number }): string {
   const c = createColors(opts.color);
+  const window = opts.window ?? CONTEXT_WINDOW;
   const lines: string[] = [];
   const rule = (ch: string) => lines.push(c.dim(ch.repeat(WIDTH)));
   const center = (s: string) => " ".repeat(Math.floor((WIDTH - s.length) / 2)) + s;
@@ -36,7 +37,13 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
     if (mine.length + unmeasured.length === 0) lines.push(c.dim("  (nothing always loaded)"));
     lines.push(row("", "-".repeat(10)));
     lines.push(c.bold(row("  SUBTOTAL", fmt(subtotal))));
-    lines.push(c.dim(`  ${((subtotal / WINDOW) * 100).toFixed(1)}% of a 200k window`));
+    if (id === "claude-code" && subtotal > 0) {
+      const adjusted = Math.round(subtotal * CLAUDE_TOKENIZER_FACTOR);
+      lines.push(c.dim(`  ~${fmt(adjusted)} in Claude's tokenizer (x1.6, rough)`));
+    }
+    lines.push(
+      c.dim(`  ${((subtotal / window) * 100).toFixed(1)}% of a ${windowLabel(window)} window`),
+    );
     if (unmeasured.length > 0)
       lines.push(c.dim("  ? = not measured (--mcp measures stdio servers)"));
     lines.push("");
@@ -85,8 +92,16 @@ function row(left: string, right: string): string {
   return l + " ".repeat(WIDTH - l.length - right.length) + right;
 }
 
+/** 200000 -> "200k", 1000000 -> "1M". */
+export function windowLabel(window: number): string {
+  if (window >= 1_000_000 && window % 1_000_000 === 0) return `${window / 1_000_000}M`;
+  if (window >= 1_000 && window % 1_000 === 0) return `${window / 1_000}k`;
+  return window.toLocaleString("en-US");
+}
+
 function label(i: Item): string {
   if (i.kind === "skill") return `skill ${i.name}`;
+  if (i.kind === "agent") return `agent ${i.name}`;
   const detail = i.detail ? ` (${i.detail})` : "";
   if (i.kind === "mcp-server") return `mcp ${i.name}${detail}`;
   return `${i.name}${detail}`;

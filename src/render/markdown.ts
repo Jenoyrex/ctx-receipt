@@ -1,10 +1,12 @@
 import { displayPath } from "../fs.js";
 import { summarize } from "../grade.js";
-import { CONTEXT_WINDOW, TOKENIZER } from "../tokens.js";
+import { TOKENIZER, windowOf } from "../tokens.js";
 import type { Item, ScanContext } from "../types.js";
+import { windowLabel } from "./receipt.js";
 
 export function renderMarkdown(items: Item[], ctx: ScanContext): string {
   const summary = summarize(items);
+  const window = windowOf(ctx);
   const n = (v: number | null | undefined) => (v === null || v === undefined ? "?" : fmt(v));
   const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
   const out: string[] = [
@@ -13,11 +15,11 @@ export function renderMarkdown(items: Item[], ctx: ScanContext): string {
     `**Grade ${summary.grade}** (heaviest agent: ${summary.worst?.label ?? "none"}). ` +
       `Always loaded across all agents: **${fmt(summary.totalAlwaysLoaded)}** tokens (estimate).`,
     "",
-    "| Agent | Always loaded | % of 200k | On demand | Unmeasured MCP servers |",
+    `| Agent | Always loaded | % of ${windowLabel(window)} | On demand | Unmeasured MCP servers |`,
     "| --- | ---: | ---: | ---: | ---: |",
     ...summary.agents.map(
       (a) =>
-        `| ${a.label} | ${fmt(a.alwaysLoaded)} | ${((a.alwaysLoaded / CONTEXT_WINDOW) * 100).toFixed(1)}% | ${fmt(a.onDemand)} | ${a.mcp.unmeasured} |`,
+        `| ${a.label} | ${fmt(a.alwaysLoaded)} | ${((a.alwaysLoaded / window) * 100).toFixed(1)}% | ${fmt(a.onDemand)} | ${a.mcp.unmeasured} |`,
     ),
   ];
   for (const a of summary.agents) {

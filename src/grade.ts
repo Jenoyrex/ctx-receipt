@@ -26,6 +26,7 @@ export interface AgentSummary {
   unmeasured: number;
   rules: { count: number; tokens: number };
   skills: { count: number; tokens: number };
+  subagents: { count: number; tokens: number };
   mcp: { count: number; tokens: number; unmeasured: number };
 }
 
@@ -55,6 +56,7 @@ export function summarize(items: Item[]): Summary {
       unmeasured: mine.filter((i) => i.loading === "unmeasured").length,
       rules: { count: ofKind("rules").length, tokens: sum(ofKind("rules")) },
       skills: { count: ofKind("skill").length, tokens: sum(ofKind("skill")) },
+      subagents: { count: ofKind("agent").length, tokens: sum(ofKind("agent")) },
       mcp: {
         count: servers.length,
         tokens: sum(ofKind("mcp-server")),

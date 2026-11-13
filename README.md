@@ -54,6 +54,7 @@ npx ctx-receipt --no-user             # project files only (what your teammates 
 npx ctx-receipt --agent claude-code   # one agent
 npx ctx-receipt --svg receipt.svg     # also write a shareable card
 npx ctx-receipt --mcp                 # start stdio MCP servers and measure their tools
+npx ctx-receipt --window 1000000      # your model has a 1M-token context window
 ```
 
 Requires Node.js 20 or later. ctx-receipt itself makes no network calls, collects no telemetry,
@@ -82,6 +83,7 @@ CLAUDE CODE
   mcp docs (http)                                  ?
                                           ----------
   SUBTOTAL                                       167
+  ~267 in Claude's tokenizer (x1.6, rough)
   0.1% of a 200k window
   ? = not measured (--mcp measures stdio servers)
 
@@ -124,6 +126,8 @@ Reading it:
 - The Cursor rule has a description and no `alwaysApply`, so Cursor pre-loads only the
   description and pulls the rule in when relevant.
 - `mcp docs` is a remote server, so it is listed but not measured.
+- `~267 in Claude's tokenizer` is a rough conversion: Claude's tokenizer counted about 1.6 times
+  our estimate when we compared with Claude Code's `/context` (see [FAQ](#faq)).
 
 ## What it counts
 
@@ -131,15 +135,18 @@ Reading it:
 | ----------- | ---------------------------------------------------------------------------------- | ----------------------------------- | ----------------------------------- |
 | Rules files | CLAUDE.md, AGENTS.md, GEMINI.md and friends, their `@` imports, always-apply rules | Rules scoped to file paths or globs |                                     |
 | Skills      | Each skill's listing line (name and description)                                   | The skill body                      |                                     |
+| Agents      | Claude Code custom agents: name and description                                    |                                     |                                     |
 | MCP servers | With `--mcp`: what the agent loads up front                                        | With `--mcp`: every tool schema     | Without `--mcp`, and remote servers |
 
 Per agent, it reads:
 
 - **Claude Code:** `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md` in the project and every
   parent folder, `~/.claude/CLAUDE.md`, `.claude/rules/` and `~/.claude/rules/`, `AGENTS.md` when
-  there is no CLAUDE.md, `@` imports (4 hops). Skills in `.claude/skills/` (up to the git root),
-  `~/.claude/skills/` including skills synced from claude.ai, and `.claude/commands/`. MCP servers
-  from `.mcp.json` and `~/.claude.json` (user and per-project).
+  there is no CLAUDE.md, `@` imports (4 hops), and auto memory (`MEMORY.md`, first 200 lines or
+  25 KB). Skills in `.claude/skills/` (up to the git root), `~/.claude/skills/` including skills
+  synced from claude.ai, and `.claude/commands/`. Custom agents in `.claude/agents/` (up to the
+  git root) and `~/.claude/agents/`: their name and description. MCP servers from `.mcp.json` and
+  `~/.claude.json` (user and per-project).
 - **Codex CLI:** `~/.codex/AGENTS.override.md` or `AGENTS.md`; from the git root down,
   `AGENTS.override.md`, `AGENTS.md`, or your fallback file names, within the 32 KiB budget.
   Skills in `.agents/skills/` and `~/.agents/skills/`. MCP servers from `~/.codex/config.toml` and
@@ -156,8 +163,8 @@ its home files are skipped and its project files are still counted.
 ### Not counted
 
 - Each agent's own system prompt and built-in tools.
-- Claude Code: managed policy files, auto memory (`MEMORY.md`), CLAUDE.md files and skills in
-  subfolders (they load on demand), plugin and bundled skills, plugin and claude.ai MCP servers.
+- Claude Code: managed policy files, CLAUDE.md files and skills in subfolders (they load on
+  demand), plugin and bundled skills and agents, plugin and claude.ai MCP servers.
 - Codex: `CODEX_HOME`, admin and bundled skills, profiles, whether the project is trusted.
 - Cursor: User Rules and Team Rules (stored in Cursor, not in files), servers turned off in the app.
 - Gemini CLI: system settings, extensions, built-in skills, `context.includeDirectories`.
@@ -197,6 +204,7 @@ check that a fake key planted in every field of every config format never reache
 | `--md <file>`       | Also write a Markdown report                                         |
 | `--svg <file>`      | Also write a shareable SVG card. It shows totals only, no file names |
 | `--budget <tokens>` | Exit 1 if the total always loaded is over `tokens`                   |
+| `--window <tokens>` | Context window for percentages and listing caps. Default: 200000     |
 
 Exit codes: `0` ok, `1` over budget, `2` usage error, `3` scan error (for example, a config file
 that is not valid JSON or TOML).
@@ -240,10 +248,12 @@ the adapter's source and in [How we count](docs/how-we-count.md).
 ## FAQ
 
 **Why are my numbers lower than Claude Code's `/context`?**
-`/context` uses Claude's own tokenizer and also includes Claude Code's system prompt, built-in
-tools, and the text it wraps around your files. ctx-receipt counts only what comes from your
-files and config, with a different tokenizer. Use it to compare setups and spot what grew, not
-to predict `/context` exactly.
+We compared the two on a real project ([details](docs/how-we-count.md#compared-with-claude-codes-context)).
+For the same files, Claude's tokenizer counted about **1.6 times** our estimate (1.57 to 1.61
+per file), so the receipt shows a rough `~N in Claude's tokenizer` figure under Claude Code.
+`/context` also includes Claude Code's system prompt and built-in tools (about 14k tokens there),
+plus plugin and built-in skills that ctx-receipt does not read. And if your model has a 1M
+window, pass `--window 1000000`: Claude Code's skill listing cap is 1% of the window.
 
 **Does it send my files anywhere?**
 No. ctx-receipt runs locally, makes no network calls, and has no telemetry. The only processes it
@@ -274,7 +284,10 @@ D under 60k, F above. The cut-offs are our own opinion, a prompt to look rather 
 
 - Numbers are estimates from one tokenizer, not each agent's. They do not include the agent's
   own system prompt or the wrapping it adds around your files.
-- The context window is assumed to be 200k tokens for percentages and listing caps.
+- The context window is 200k tokens unless you pass `--window`; it sets the percentages and the
+  skill listing caps.
+- The Claude-tokenizer figure uses one factor (1.6) from one comparison. It is a guide, not a
+  measurement; totals, budgets, and grades use the raw estimate.
 - Skill listing caps: when an agent trims descriptions to fit, we cannot know which ones it
   trims, so per-skill numbers under a cap are approximate (the total is right).
 - Settings that live inside an app rather than in files (Cursor User Rules, toggles in `/mcp`)

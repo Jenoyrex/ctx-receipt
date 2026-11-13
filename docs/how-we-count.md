@@ -14,6 +14,10 @@ before you type anything, and what can it pull in later?** Every number it print
   what your bill or your `/context` view will say.
 - Agents also wrap what they load (headings, file paths, separators, tool-use framing). We count
   the content, not the wrapping, so real usage is usually a little higher.
+- For Claude Code, the receipt also shows `~N in Claude's tokenizer`: the subtotal times 1.6, the
+  ratio we measured against `/context` (below). It is a rough guide for display; totals,
+  `--budget`, and the grade stay on the raw estimate.
+- Percentages and skill listing caps use a 200k-token window unless you pass `--window`.
 
 ## Three kinds of loading
 
@@ -46,6 +50,13 @@ every name and drop or shorten descriptions. We apply the same cap: names are ke
 line's description share is scaled down until the total fits. Lines affected are marked
 `listing cap`. The total is right; which skill lost how much is approximate, because the agents
 drop the descriptions of the skills you use least and we cannot know your usage.
+
+### Custom agents (Claude Code)
+
+Claude Code lists each custom agent (`.claude/agents/` up to the git root, `~/.claude/agents/`)
+in the main context as its name, description, and tools, so it can delegate. That line is always
+loaded. The agent's body is its own system prompt and loads only in the agent's separate
+context, so it is not counted against yours.
 
 ### MCP servers
 
@@ -117,8 +128,18 @@ What this shows:
 - **What we miss.** The `/context` skills category also holds plugin skills and Claude Code's own
   built-in skills, which we do not read; it was exactly at its 10,000-token cap, so Claude Code
   had dropped descriptions (12 of 13 synced skills showed under 20 tokens, name only). We
-  counted those synced skills with full descriptions. Custom agents and auto memory are
-  pre-loaded too and we do not count them yet.
+  counted those synced skills with full descriptions.
+
+Changes made in 0.1.1 after this comparison:
+
+- **Custom agents** are now counted: each agent's `- name: description (Tools: ...)` line. On the
+  same project that gave 246 tokens for the four project and user agents, about 394 at 1.6,
+  against 358 in `/context`.
+- **Auto memory** is now counted: the first 200 lines or 25 KB of the repository's `MEMORY.md`.
+  37 tokens, about 59 at 1.6, against 60 in `/context`.
+- **`--window <tokens>`** sets the window, so `--window 1000000` gives Claude Code a 10,000-token
+  skill listing cap, as `/context` showed.
+- The receipt shows the rough Claude-tokenizer figure under Claude Code's subtotal.
 
 ## What we do not count
 
