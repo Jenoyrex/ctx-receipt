@@ -60,6 +60,25 @@ export function skillItems(
   return out;
 }
 
+/**
+ * Agents cap the whole skill listing at a share of the context window. Over the cap, they keep
+ * every skill's name and drop or shorten descriptions. We cannot know which descriptions go, so
+ * we scale each skill's description share down until the listing fits, never below its name.
+ */
+export function capSkillListing(items: Item[], budgetTokens: number): void {
+  const listed = items.filter((i) => i.kind === "skill" && i.loading === "always");
+  const total = listed.reduce((n, i) => n + (i.tokens ?? 0), 0);
+  if (total <= budgetTokens) return;
+  const floors = listed.map((i) => Math.min(i.tokens ?? 0, estimateTokens(`- ${i.name}`)));
+  const floorTotal = floors.reduce((a, b) => a + b, 0);
+  const target = Math.max(floorTotal, budgetTokens);
+  const share = total > floorTotal ? (target - floorTotal) / (total - floorTotal) : 0;
+  listed.forEach((item, k) => {
+    item.tokens = Math.round(floors[k] + ((item.tokens ?? 0) - floors[k]) * share);
+    item.detail = "listing cap";
+  });
+}
+
 export function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }

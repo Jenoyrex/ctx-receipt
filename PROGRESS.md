@@ -13,8 +13,8 @@ original plan (Step 0, M1 to M9). Last updated 2026-11-12.
 | M3        | Skills (Claude Code, Codex)                                             | Done        |
 | M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done        |
 | M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done        |
-| M6        | `--mcp` live measurement                                                | In progress |
-| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Not started |
+| M6        | `--mcp` live measurement                                                | Done        |
+| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | In progress |
 | M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Not started |
 | M9        | Release dry run with `npm pack`                                         | Not started |
 
@@ -23,11 +23,11 @@ row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
 
 ## Now
 
-M6, task 2: `--mcp` and `--mcp <name>`. `src/mcp/launch.ts` is the only code that reads
-`command`, `args`, `env`; it spawns with stderr ignored, 10 s timeout, and always closes.
-`src/mcp/measure.ts` turns tool lists into two numbers per server (up front, full) using each
-agent's deferral rule. Tests use only `test/fixtures/mcp/fake-server.mjs`. Then commit, push,
-check CI, and move to M7.
+M7: one `summarize()` (per-agent totals, worst agent, grade) in `src/grade.ts` feeds every
+output. Add `--json` (stdout), `--md <file>`, `--svg <file>` (an opaque receipt card with agent
+totals only, no file names, so no home paths), `--budget <tokens>` (exit 1 when over), and the
+grade line on the receipt. Apply each agent's skill listing cap (Claude Code 1%, Codex 2% of a
+200k window). Every format goes into the leak test's `FORMATS` list.
 
 ## Decisions (M6 to M9)
 

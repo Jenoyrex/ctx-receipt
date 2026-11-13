@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { claudeCode } from "../src/adapters/claude-code.js";
 import { codex } from "../src/adapters/codex.js";
+import { capSkillListing } from "../src/skills.js";
 import { estimateTokens } from "../src/tokens.js";
 import type { Item } from "../src/types.js";
 
@@ -115,5 +116,65 @@ describe("codex skills", () => {
       includeUser: false,
     });
     expect(skills(items)).toEqual(["build always", "build on-demand"]);
+  });
+});
+
+describe("skill listing cap", () => {
+  const skill = (name: string, tokens: number): Item => ({
+    agent: "x",
+    kind: "skill",
+    name,
+    path: `/s/${name}`,
+    scope: "user",
+    loading: "always",
+    tokens,
+  });
+
+  test("under the budget nothing changes", () => {
+    const items = [skill("a", 100), skill("b", 100)];
+    capSkillListing(items, 500);
+    expect(items.map((i) => i.tokens)).toEqual([100, 100]);
+    expect(items.some((i) => i.detail)).toBe(false);
+  });
+
+  test("over the budget the listing shrinks to the budget, bodies untouched", () => {
+    const body: Item = { ...skill("a", 9000), loading: "on-demand" };
+    const items = [skill("a", 3000), skill("b", 1000), body];
+    capSkillListing(items, 2000);
+    const listed = items.filter((i) => i.loading === "always");
+    const sum = listed.reduce((n, i) => n + (i.tokens ?? 0), 0);
+    expect(Math.abs(sum - 2000)).toBeLessThanOrEqual(1);
+    expect(listed.every((i) => i.detail === "listing cap")).toBe(true);
+    expect(body.tokens).toBe(9000);
+  });
+
+  test("names are always kept: the listing never drops below the names", () => {
+    const items = [skill("alpha", 50), skill("beta", 50)];
+    capSkillListing(items, 1);
+    for (const i of items) expect(i.tokens).toBe(estimateTokens(`- ${i.name}`));
+  });
+
+  test("Claude Code reads skillListingBudgetFraction from ~/.claude/settings.json", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "ctx-receipt-cap-"));
+    try {
+      const home = join(tmp, "home");
+      for (let n = 0; n < 40; n++) {
+        const dir = join(home, ".claude", "skills", `s${n}`);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, "SKILL.md"), `---\ndescription: ${"word ".repeat(100)}\n---\nx\n`);
+      }
+      const ctx = { project: join(tmp, "p"), home, includeUser: true };
+      mkdirSync(ctx.project);
+      const listing = () =>
+        claudeCode
+          .scan(ctx)
+          .filter((i) => i.kind === "skill" && i.loading === "always")
+          .reduce((n, i) => n + (i.tokens ?? 0), 0);
+      expect(Math.abs(listing() - 2000)).toBeLessThanOrEqual(2); // 1% of 200k
+      writeFileSync(join(home, ".claude", "settings.json"), '{"skillListingBudgetFraction":0.015}');
+      expect(Math.abs(listing() - 3000)).toBeLessThanOrEqual(2);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

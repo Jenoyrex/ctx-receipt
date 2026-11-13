@@ -1,10 +1,9 @@
 import { createColors } from "picocolors";
 import { adapters } from "../adapters/index.js";
-import { TOKENIZER } from "../tokens.js";
+import { TOKENIZER, CONTEXT_WINDOW as WINDOW } from "../tokens.js";
 import type { Item } from "../types.js";
 
 const WIDTH = 52;
-const WINDOW = 200_000;
 
 export function renderReceipt(items: Item[], opts: { color: boolean }): string {
   const c = createColors(opts.color);

@@ -35,8 +35,16 @@ import matter from "gray-matter";
 import { ancestors, displayPath, isFile, realPath, repoDirs, subdirs } from "../fs.js";
 import { findImports, listMarkdown, stripHtmlComments } from "../markdown.js";
 import { isObject, type McpServer, readJsonConfig, safeServers, serverItem } from "../redact.js";
-import { findSkills, readSkill, type Skill, skillItems, str, truthy } from "../skills.js";
-import { estimateTokens } from "../tokens.js";
+import {
+  capSkillListing,
+  findSkills,
+  readSkill,
+  type Skill,
+  skillItems,
+  str,
+  truthy,
+} from "../skills.js";
+import { CONTEXT_WINDOW, estimateTokens } from "../tokens.js";
 import type { Adapter, Item, Loading, Scope } from "../types.js";
 
 const AGENT = "claude-code";
@@ -135,6 +143,14 @@ export const claudeCode: Adapter = {
     loadRules(join(ctx.project, ".claude", "rules"), "project");
     for (const d of repoDirs(ctx.project)) loadSkills(join(d, ".claude", "skills"), "project");
     loadCommands(join(ctx.project, ".claude", "commands"), "project");
+
+    // The skill listing is capped at skillListingBudgetFraction of the window (default 1%).
+    const settings = ctx.includeUser
+      ? readJsonConfig(join(ctx.home, ".claude", "settings.json"))
+      : null;
+    const fraction = isObject(settings) ? settings.skillListingBudgetFraction : undefined;
+    const share = typeof fraction === "number" && fraction > 0 && fraction <= 1 ? fraction : 0.01;
+    capSkillListing(items, CONTEXT_WINDOW * share);
 
     // MCP servers, in precedence order so the first definition of a name wins.
     const servers = new Map<string, Item>();

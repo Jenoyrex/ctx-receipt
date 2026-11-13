@@ -29,8 +29,8 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { displayPath, isFile, realPath, repoDirs } from "../fs.js";
 import { isObject, readTomlConfig, safeServers, serverItem } from "../redact.js";
-import { findSkills, readSkill, type Skill, skillItems, str } from "../skills.js";
-import { estimateTokens } from "../tokens.js";
+import { capSkillListing, findSkills, readSkill, type Skill, skillItems, str } from "../skills.js";
+import { CONTEXT_WINDOW, estimateTokens } from "../tokens.js";
 import type { Adapter, Item, Scope } from "../types.js";
 
 const AGENT = "codex";
@@ -115,6 +115,10 @@ export const codex: Adapter = {
     };
     if (ctx.includeUser) loadSkills(join(ctx.home, ".agents", "skills"), "user");
     for (const d of dirs) loadSkills(join(d, ".agents", "skills"), "project");
+    // The skill listing uses at most 2% of the window, or skills.max_context_tokens (<= 10,000).
+    const skillsTable = setting("skills");
+    const max = isObject(skillsTable) ? skillsTable.max_context_tokens : undefined;
+    capSkillListing(items, Math.min(numberOr(max, CONTEXT_WINDOW * 0.02), 10_000));
 
     // MCP servers: later layers override earlier ones by name.
     const servers = new Map<string, Item>();
