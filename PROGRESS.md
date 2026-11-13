@@ -5,26 +5,26 @@ original plan (Step 0, M1 to M9). Last updated 2026-11-12.
 
 ## Status
 
-| Milestone | What                                                                    | Status      |
-| --------- | ----------------------------------------------------------------------- | ----------- |
-| Step 0    | Check the npm name, init git                                            | Done        |
-| M1        | Skeleton: build, lint, test, CI, `--version`                            | Done        |
-| M2        | Core scan, Claude Code rules, plain receipt                             | Done        |
-| M3        | Skills (Claude Code, Codex)                                             | Done        |
-| M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done        |
-| M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done        |
-| M6        | `--mcp` live measurement                                                | Done        |
-| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Done        |
-| M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Done        |
-| M9        | Release dry run with `npm pack`                                         | Not started |
+| Milestone | What                                                                    | Status |
+| --------- | ----------------------------------------------------------------------- | ------ |
+| Step 0    | Check the npm name, init git                                            | Done   |
+| M1        | Skeleton: build, lint, test, CI, `--version`                            | Done   |
+| M2        | Core scan, Claude Code rules, plain receipt                             | Done   |
+| M3        | Skills (Claude Code, Codex)                                             | Done   |
+| M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done   |
+| M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done   |
+| M6        | `--mcp` live measurement                                                | Done   |
+| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Done   |
+| M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Done   |
+| M9        | Release dry run with `npm pack`                                         | Done   |
 
-Current checks: lint, typecheck, and build pass; 79 tests in 11 files pass. Earlier: 61 tests (three runs in a
+Current checks: lint, typecheck, and build pass; 81 tests in 12 files pass. Earlier: 61 tests (three runs in a
 row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
 
 ## Now
 
-M9: `npm pack`, install the tarball in a fresh temp folder, run it against the demo and the test
-fixtures (with `--home` pointing at fixtures, never the real home), and fix anything broken.
+All milestones (Step 0 to M9) are done. What is left needs a person: see "Left for you" at the
+end of this file.
 
 ## Decisions (M6 to M9)
 
@@ -87,6 +87,17 @@ fixtures (with `--home` pointing at fixtures, never the real home), and fix anyt
 - The release workflow publishes on a `v*` tag with npm provenance, after lint, typecheck, build,
   tests, and a check that the tag matches package.json. It needs an `NPM_TOKEN` repository
   secret. No tag was created.
+- M9 release dry run (Windows, Node 25): `npm pack` gives 6 files, 18.7 kB (LICENSE, README,
+  package.json, `dist/`). Installed into an empty folder, the tarball's CLI printed `0.1.0`, and
+  its demo receipt was identical to the repo build. `--json`, `--md`, `--svg`, `--budget`, and
+  `--mcp`/`--mcp plain` (fixture servers only; the hanging one timed out at 10 s and was killed,
+  14 s in all) all worked. The secrets fixture leaked nothing in any format, every agent
+  fixture ran, the exit codes were right, and no fake-server process was left running.
+- Found in M9: `npx <bare Windows path to .tgz>` silently runs nothing and exits 0, while
+  `npx file:<path>` and `npm exec --package=<path>` work. That is npx's handling of Windows
+  paths, not the package; `npx ctx-receipt` from the registry resolves by name. Not changed.
+- CI now also packs, installs the tarball in an empty folder, and runs it on Linux with Node 20
+  and 22, because the local dry run could only use Node 25 on Windows.
 
 ## Unverified
 
@@ -98,7 +109,7 @@ fixtures (with `--home` pointing at fixtures, never the real home), and fix anyt
 
 ## Blocked
 
-Nothing yet.
+Nothing. No task needed three failed attempts.
 
 ## Step 0: name and repository
 
@@ -234,12 +245,16 @@ node dist/cli.js path/to/repo --no-user
 node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 ```
 
-## Next
+## Left for you
 
-- **M6:** start stdio MCP servers only with `--mcp`, print the commands first, list tools, 10 s
-  timeout per server, always shut them down. Count Claude Code's deferred tool schemas as on
-  demand.
-- **M7:** `--json`, `--md`, `--svg`, `--budget`, and the letter grade. Add each new format to the
-  leak test's `FORMATS` list.
-- **M8:** README, CONTRIBUTING, issue templates, CHANGELOG, release workflow.
-- **M9:** `npm pack` dry run.
+- Compare the tool's numbers against Claude Code's `/context` in a real project. Expect ours to
+  be lower: `/context` uses Claude's tokenizer and includes the system prompt, built-in tools,
+  and wrapping text we do not count. The comparison tells us how far off the estimate is.
+- Run `--mcp` against your own servers once, knowing it starts the commands in your config.
+  Tests and checks here only ever started the fixture server.
+- Check the Codex and Cursor MCP deferral behaviour in the apps themselves (marked unverified).
+- Decide on the commit author email before making the repo public (it is your Gmail address).
+- Make the repository public; the README image on npmjs.com loads from the repository.
+- Add an `NPM_TOKEN` secret to the repository for the release workflow, then publish (commands
+  in the final report).
+- Optional: add an `author` field to package.json.

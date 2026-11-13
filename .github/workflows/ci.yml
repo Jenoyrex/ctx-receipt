@@ -22,3 +22,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+      - name: Pack, install the tarball in an empty folder, and run it
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          mkdir "$RUNNER_TEMP/app"
+          cd "$RUNNER_TEMP/app"
+          npm init -y > /dev/null
+          npm install "$RUNNER_TEMP"/ctx-receipt-*.tgz
+          npx --no-install ctx-receipt --version
+          npx --no-install ctx-receipt "$GITHUB_WORKSPACE/examples/demo/project" --home "$GITHUB_WORKSPACE/examples/demo/home" --budget 1000
