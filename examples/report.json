@@ -1,0 +1,231 @@
+{
+  "tool": "ctx-receipt",
+  "version": "0.0.0",
+  "estimate": true,
+  "note": "All token counts are estimates; each agent's own tokenizer differs.",
+  "tokenizer": "o200k_base via gpt-tokenizer",
+  "contextWindow": 200000,
+  "grade": "A",
+  "gradeCutoffs": {
+    "A": 5000,
+    "B": 15000,
+    "C": 30000,
+    "D": 60000
+  },
+  "heaviestAgent": "claude-code",
+  "totalAlwaysLoaded": 175,
+  "agents": [
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "verified": true,
+      "alwaysLoaded": 175,
+      "onDemand": 62,
+      "unmeasured": 0,
+      "rules": {
+        "count": 9,
+        "tokens": 117
+      },
+      "skills": {
+        "count": 5,
+        "tokens": 58
+      },
+      "mcp": {
+        "count": 0,
+        "tokens": 0,
+        "unmeasured": 0
+      }
+    }
+  ],
+  "items": [
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "~/.claude/CLAUDE.md",
+      "file": "~/.claude/CLAUDE.md",
+      "scope": "user",
+      "loading": "always",
+      "tokens": 9
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "~/.claude/rules/prefs.md",
+      "file": "~/.claude/rules/prefs.md",
+      "scope": "user",
+      "loading": "always",
+      "tokens": 6
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "deploy",
+      "file": "~/.claude/skills/deploy/SKILL.md",
+      "scope": "user",
+      "loading": "on-demand",
+      "tokens": 10
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "code-review",
+      "file": "~/.claude/skills/review/SKILL.md",
+      "scope": "user",
+      "loading": "always",
+      "tokens": 19
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "code-review",
+      "file": "~/.claude/skills/review/SKILL.md",
+      "scope": "user",
+      "loading": "on-demand",
+      "tokens": 14
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "pdf",
+      "file": "~/.claude/skills/synced/acct1/pdf/SKILL.md",
+      "scope": "user",
+      "loading": "always",
+      "tokens": 9
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "pdf",
+      "file": "~/.claude/skills/synced/acct1/pdf/SKILL.md",
+      "scope": "user",
+      "loading": "on-demand",
+      "tokens": 5
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "git:commit",
+      "file": "~/.claude/commands/git/commit.md",
+      "scope": "user",
+      "loading": "always",
+      "tokens": 9
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "git:commit",
+      "file": "~/.claude/commands/git/commit.md",
+      "scope": "user",
+      "loading": "on-demand",
+      "tokens": 7
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "CLAUDE.md",
+      "file": "CLAUDE.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 55
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "@docs/guide.md",
+      "file": "docs/guide.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 10
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "@docs/chain/a.md",
+      "file": "docs/chain/a.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 7
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "@docs/chain/b.md",
+      "file": "docs/chain/b.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 7
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "@docs/chain/c.md",
+      "file": "docs/chain/c.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 7
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": "CLAUDE.local.md",
+      "file": "CLAUDE.local.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 11
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": ".claude/rules/backend/api.md",
+      "file": ".claude/rules/backend/api.md",
+      "scope": "project",
+      "loading": "on-demand",
+      "tokens": 7
+    },
+    {
+      "agent": "claude-code",
+      "kind": "rules",
+      "name": ".claude/rules/style.md",
+      "file": ".claude/rules/style.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 5
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "badyaml",
+      "file": ".claude/skills/badyaml/SKILL.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 12
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "badyaml",
+      "file": ".claude/skills/badyaml/SKILL.md",
+      "scope": "project",
+      "loading": "on-demand",
+      "tokens": 8
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "nofront",
+      "file": ".claude/skills/nofront/SKILL.md",
+      "scope": "project",
+      "loading": "always",
+      "tokens": 9
+    },
+    {
+      "agent": "claude-code",
+      "kind": "skill",
+      "name": "nofront",
+      "file": ".claude/skills/nofront/SKILL.md",
+      "scope": "project",
+      "loading": "on-demand",
+      "tokens": 11
+    }
+  ]
+}

@@ -14,11 +14,11 @@ original plan (Step 0, M1 to M9). Last updated 2026-11-12.
 | M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done        |
 | M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done        |
 | M6        | `--mcp` live measurement                                                | Done        |
-| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | In progress |
+| M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Done        |
 | M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Not started |
 | M9        | Release dry run with `npm pack`                                         | Not started |
 
-Current checks: lint, typecheck, and build pass; 61 tests in 10 files pass (three runs in a
+Current checks: lint, typecheck, and build pass; 79 tests in 11 files pass. Earlier: 61 tests (three runs in a
 row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
 
 ## Now
@@ -57,6 +57,26 @@ grade line on the receipt. Apply each agent's skill listing cap (Claude Code 1%,
 - Leak tests checked by planting leaks: a reason that included the server's args made the leak
   test fail, as it should. On Windows, cross-spawn runs commands through cmd.exe, so a missing
   command never produces a spawn error; on Linux it would, and its message names the command.
+
+- Skill listing cap (M7): Claude Code caps the listing at `skillListingBudgetFraction` of the
+  window (default 1%, read from `~/.claude/settings.json`), Codex at 2% or
+  `skills.max_context_tokens` (at most 10,000). Gemini CLI documents no cap. Over the cap we keep
+  every skill's name and scale the description share of each listing line down until the total
+  fits, and mark those lines "listing cap". Agents drop the least-used descriptions instead; we
+  cannot know usage, so per-skill numbers are approximate but the total matches the cap. Window
+  size is assumed to be 200k for every agent.
+- `--json` replaces the receipt on stdout. `--md <file>` and `--svg <file>` write files in
+  addition to the receipt (or the JSON). These are the only files the tool writes, and only
+  where the user points them.
+- JSON and Markdown name files project-relative or with `~/`, never as absolute paths.
+- The SVG card shows per-agent totals and counts (rules, skills, MCP servers) and no file or
+  server names, so no home path can appear. It draws its own opaque paper background and
+  border, so it reads the same on GitHub's light and dark themes (checked in a browser on
+  `#ffffff` and `#0d1117`).
+- `--budget <tokens>` checks the total always loaded across all agents shown (the receipt's
+  TOTAL line), as the plan says. Exit 1 when over; the report still prints. Use `--agent` to
+  budget one agent. A value that is not a whole number exits 2.
+- The grade uses the heaviest agent's always-loaded tokens (cut-offs in `src/grade.ts`).
 
 ## Unverified
 

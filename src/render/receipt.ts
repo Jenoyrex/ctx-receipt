@@ -1,5 +1,6 @@
 import { createColors } from "picocolors";
 import { adapters } from "../adapters/index.js";
+import { summarize } from "../grade.js";
 import { TOKENIZER, CONTEXT_WINDOW as WINDOW } from "../tokens.js";
 import type { Item } from "../types.js";
 
@@ -55,6 +56,9 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
 
   rule("-");
   lines.push(c.bold(row("TOTAL ALWAYS LOADED", fmt(sum(always)))));
+  const summary = summarize(items);
+  lines.push(c.bold(row("GRADE", summary.grade)));
+  if (summary.worst) lines.push(c.dim(`  from the heaviest agent: ${summary.worst.label}`));
   rule("=");
   lines.push(c.dim("All token counts are ESTIMATES."));
   lines.push(c.dim(`Tokenizer: ${TOKENIZER}.`));

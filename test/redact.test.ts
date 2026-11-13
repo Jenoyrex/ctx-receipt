@@ -16,16 +16,35 @@ const home = join(fixtures, "home");
 const cli = (...args: string[]) =>
   spawnSync(process.execPath, ["dist/cli.js", ...args], { encoding: "utf8" });
 
-// Add every new output format here (--json, --md, --svg) when it lands.
-const FORMATS: string[][] = [[], ["--no-user"], ["--agent", "claude-code"]];
+// Every output format goes here. Files a format writes are checked too.
+const outDir = mkdtempSync(join(tmpdir(), "ctx-receipt-formats-"));
+afterAll(() => rmSync(outDir, { recursive: true, force: true }));
+const FORMATS: { name: string; flags: string[]; status?: number; listsServers?: boolean }[] = [
+  { name: "receipt", flags: [] },
+  { name: "receipt --no-user", flags: ["--no-user"] },
+  { name: "receipt --agent claude-code", flags: ["--agent", "claude-code"] },
+  { name: "--json", flags: ["--json"] },
+  { name: "--md", flags: ["--md", join(outDir, "report.md")] },
+  // The SVG card shows totals only, never server or file names.
+  { name: "--svg", flags: ["--svg", join(outDir, "card.svg")], listsServers: false },
+  { name: "--budget (over)", flags: ["--budget", "0"], status: 1 },
+];
 
 describe("secrets never appear in output", () => {
-  test.each(FORMATS)("CLI stdout and stderr (%s)", (...flags) => {
-    const r = cli(project, "--home", home, ...flags);
-    expect(r.status).toBe(0);
-    expect(r.stdout + r.stderr).not.toMatch(LEAK);
-    expect(r.stdout).toContain("mcp github"); // the servers are listed, just not their secrets
-    expect(r.stdout).toContain("mcp remote (http)");
+  test.each(FORMATS)("$name: stdout, stderr, and written files", (format) => {
+    const r = cli(project, "--home", home, ...format.flags);
+    expect(r.status).toBe(format.status ?? 0);
+    const written = format.flags
+      .filter((f) => f.startsWith(outDir))
+      .map((f) => readFileSync(f, "utf8"))
+      .join("\n");
+    const everything = r.stdout + r.stderr + written;
+    expect(everything).not.toMatch(LEAK);
+    // The servers are reported, just not their secrets.
+    if (format.listsServers !== false) {
+      expect(everything).toContain("github");
+      expect(everything).toContain("remote");
+    }
   });
 
   test("scan records", () => {

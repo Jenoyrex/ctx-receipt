@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { resolve } from "node:path";
@@ -5,11 +6,16 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { adapters } from "./adapters/index.js";
 import { isDir } from "./fs.js";
+import { summarize } from "./grade.js";
+import { renderJson } from "./render/json.js";
+import { renderMarkdown } from "./render/markdown.js";
 import { renderReceipt } from "./render/receipt.js";
+import { renderSvg } from "./render/svg.js";
 import { scan } from "./scan.js";
 import type { Item, ScanContext } from "./types.js";
 
 // Exit codes: 0 ok, 1 over budget, 2 usage error, 3 scan error.
+const OVER_BUDGET = 1;
 const USAGE = 2;
 const SCAN_ERROR = 3;
 
@@ -21,6 +27,10 @@ interface Options {
   home?: string;
   agent?: string[];
   mcp?: true | string;
+  json?: boolean;
+  md?: string;
+  svg?: string;
+  budget?: string;
 }
 
 const program = new Command()
@@ -35,12 +45,20 @@ const program = new Command()
     "--mcp [name]",
     "start stdio MCP servers from your config (or only <name>) and measure their tools",
   )
+  .option("--json", "print a JSON report to stdout instead of the receipt")
+  .option("--md <file>", "also write a Markdown report")
+  .option("--svg <file>", "also write a shareable SVG receipt card")
+  .option("--budget <tokens>", "exit 1 if the always-loaded total is over <tokens>")
   .exitOverride((err) => process.exit(err.exitCode === 0 ? 0 : USAGE))
   .action(async (path: string, opts: Options) => {
     const project = resolve(path);
     if (!isDir(project)) fail(USAGE, `not a directory: ${path}`);
     const unknown = opts.agent?.filter((a) => !adapters.some((x) => x.id === a)) ?? [];
     if (unknown.length > 0) fail(USAGE, `unknown agent: ${unknown.join(", ")}`);
+    const budget = opts.budget === undefined ? undefined : Number(opts.budget);
+    if (budget !== undefined && !(Number.isInteger(budget) && budget >= 0)) {
+      fail(USAGE, `--budget needs a whole number of tokens, got "${opts.budget}"`);
+    }
 
     const ctx: ScanContext = {
       project,
@@ -68,9 +86,27 @@ const program = new Command()
       }
     }
 
-    // picocolors alone enables color on Windows and in CI even when piped; also require a TTY.
-    const color = pc.isColorSupported && process.stdout.isTTY === true;
-    process.stdout.write(renderReceipt(items, { color }));
+    if (opts.json) {
+      process.stdout.write(renderJson(items, ctx, version));
+    } else {
+      // picocolors alone enables color on Windows and in CI even when piped; also require a TTY.
+      const color = pc.isColorSupported && process.stdout.isTTY === true;
+      process.stdout.write(renderReceipt(items, { color }));
+    }
+    try {
+      if (opts.md) writeFileSync(opts.md, renderMarkdown(items, ctx));
+      if (opts.svg) writeFileSync(opts.svg, renderSvg(items));
+    } catch (err) {
+      fail(SCAN_ERROR, `could not write report: ${(err as NodeJS.ErrnoException).code ?? "error"}`);
+    }
+
+    const total = summarize(items).totalAlwaysLoaded;
+    if (budget !== undefined && total > budget) {
+      process.stderr.write(
+        `ctx-receipt: over budget: ${total} tokens always loaded (estimate) > ${budget}\n`,
+      );
+      process.exitCode = OVER_BUDGET;
+    }
   });
 
 function fail(code: number, msg: string): never {
