@@ -91,6 +91,35 @@ we skip its home-directory files and still count its project files. Some folders
 (Codex and Gemini CLI both read `~/.agents/skills`), so without this an agent you do not use
 would appear. `--agent <name>` reads home files for that agent anyway.
 
+## Compared with Claude Code's `/context`
+
+On 2026-11-13 we ran `claude -p "/context"` (Claude Code 2.1.322, a 1M-token model) and
+`ctx-receipt --agent claude-code` on the same real project, without `--mcp`.
+
+| Category                                                       | `/context` | ctx-receipt | Notes                                 |
+| -------------------------------------------------------------- | ---------: | ----------: | ------------------------------------- |
+| User `~/.claude/CLAUDE.md`                                     |        190 |         121 | ratio 1.57                            |
+| Project `CLAUDE.md`                                            |      1,800 |       1,135 | ratio 1.59                            |
+| Skill listing, 24 skills and commands with a `/context` number |      2,030 |       1,258 | ratio 1.61 (per skill 1.25 to 2.00)   |
+| Skill listing, whole category                                  |     10,000 |       1,998 | see "window" and "what we miss" below |
+| Auto memory `MEMORY.md`                                        |         60 | not counted |                                       |
+| Custom agents (`.claude/agents`)                               |        617 | not counted |                                       |
+| MCP server instructions and up-front tools                     |        886 |         `?` | not measured without `--mcp`          |
+| System prompt and built-in tools                               |     14,300 | not counted | by design                             |
+
+What this shows:
+
+- **Tokenizer.** For the same text, Claude's tokenizer gave about **1.6 times** as many tokens as
+  `o200k_base`, consistently across files and skills. Read our numbers as roughly 60% low for
+  Claude models.
+- **Window.** We assume a 200k window. This model had 1M, so Claude Code's skill listing cap
+  (1%) was 10,000 tokens, not 2,000; our cap cut the listing far below what the model received.
+- **What we miss.** The `/context` skills category also holds plugin skills and Claude Code's own
+  built-in skills, which we do not read; it was exactly at its 10,000-token cap, so Claude Code
+  had dropped descriptions (12 of 13 synced skills showed under 20 tokens, name only). We
+  counted those synced skills with full descriptions. Custom agents and auto memory are
+  pre-loaded too and we do not count them yet.
+
 ## What we do not count
 
 See the "Not counted" list in the README. Each adapter in `src/adapters/` also lists, in its
