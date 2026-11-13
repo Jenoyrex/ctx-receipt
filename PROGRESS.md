@@ -244,6 +244,35 @@ design. Full details in `docs/how-we-count.md`.
 - After the fix, on the same project: agents 246 (about 394 at 1.6) against 358 in `/context`;
   auto memory 37 (about 59) against 60.
 
+## `--mcp` on the real config
+
+Run on 2026-11-13 in a real project with the real home config (`--mcp --window 1000000`). It
+started only the one stdio server, after printing its name, transport, and config file.
+
+- `shadcn` (stdio, via `npx`): timed out at 10 s on both runs. Claude Code itself also timed out
+  on it at startup (30 s), so the server slows every session and provides no tools.
+- `motion` (HTTP): remote, so not measured, by design.
+- Shutdown was clean: no process from the runs was left running, even through Windows' `npx`
+  and `cmd.exe` chain (the shadcn processes still running belonged to the Claude Code app).
+  On Windows a timed-out run takes about 20 to 40 s in all, because stopping the chain is slower.
+- Claude Code pre-loads 4,658 tokens there (estimate), about 7,453 in Claude's tokenizer.
+
+## Launch preparation
+
+- Repository: homepage set to the npm page, Discussions enabled, 13 topics.
+- Social preview: `.github/social-preview.png` (1280x640) from `.github/social-preview.html`,
+  rendered with Edge. Uploading it is a manual step (no GitHub API).
+- GitHub Releases for `v0.1.0`, `v0.1.1`, `v0.1.2`, with notes from the CHANGELOG.
+- Six starter issues from real gaps:
+  [#1](https://github.com/Jenoyrex/ctx-receipt/issues/1) GitHub Copilot,
+  [#2](https://github.com/Jenoyrex/ctx-receipt/issues/2) Windsurf,
+  [#3](https://github.com/Jenoyrex/ctx-receipt/issues/3) Cline / Roo Code,
+  [#4](https://github.com/Jenoyrex/ctx-receipt/issues/4) Codex `CODEX_HOME` (good first issue),
+  [#5](https://github.com/Jenoyrex/ctx-receipt/issues/5) Claude Code plugin skills,
+  [#6](https://github.com/Jenoyrex/ctx-receipt/issues/6) verify Codex and Cursor MCP deferral.
+- Launch kit with drafts for Show HN, Reddit, X, LinkedIn, and Dev.to, all using real numbers,
+  plus the rules of four awesome lists: `launch/LAUNCH-KIT.md`, kept out of git.
+
 ## Problems hit and how they were solved
 
 - **Lock file broke CI twice.** On Windows, `npm install <package>` with an existing
@@ -304,8 +333,13 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 
 ## Left for you
 
-- Run `--mcp` on your own servers once, knowing it starts the commands in your config. Every
-  check here started only the fixture server.
+- Upload the social preview: Settings > General > Social preview > Edit > upload
+  `.github/social-preview.png` (GitHub has no API for it).
+- Launch: post the drafts in `launch/LAUNCH-KIT.md` (local, git-ignored) in the order it gives,
+  then submit to the awesome lists it names once there is traction (awesome-claude-code needs
+  at least 100 stars).
+- Fix or remove the `shadcn` MCP server in `~/.claude.json`: it times out on every start, in
+  ctx-receipt and in Claude Code itself.
 - Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
 - Check Codex's and Cursor's MCP deferral in the apps themselves (marked unverified).
 - For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish) so the
