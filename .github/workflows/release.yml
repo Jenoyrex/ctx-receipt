@@ -25,6 +25,15 @@ jobs:
       - run: npm test
       - name: Check the tag matches package.json
         run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
-      - run: npm publish --provenance --access public
+      - name: Skip publishing if this version is already on npm
+        id: published
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if npm view "ctx-receipt@$version" version > /dev/null 2>&1; then
+            echo "ctx-receipt@$version is already on npm; nothing to publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.skip != 'true'
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
