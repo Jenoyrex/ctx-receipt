@@ -2,6 +2,14 @@
 
 All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org).
 
+## 0.1.2 (2026-11-13)
+
+Documentation only; no change to what the tool counts or prints.
+
+- README: install options (global and per project), an "Outputs" section with a real `--json`
+  excerpt, a "Privacy and safety" section, and the supported-agents table updated for custom
+  agents and auto memory.
+
 ## 0.1.1 (2026-11-13)
 
 Fixes from comparing ctx-receipt with Claude Code's `/context` on a real project.

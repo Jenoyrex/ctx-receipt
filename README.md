@@ -222,7 +222,7 @@ An excerpt of `--json` for the example above:
 ```json
 {
   "tool": "ctx-receipt",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "estimate": true,
   "tokenizer": "o200k_base via gpt-tokenizer",
   "contextWindow": 200000,

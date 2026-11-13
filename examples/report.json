@@ -1,6 +1,6 @@
 {
   "tool": "ctx-receipt",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "estimate": true,
   "note": "All token counts are estimates; each agent's own tokenizer differs.",
   "tokenizer": "o200k_base via gpt-tokenizer",
