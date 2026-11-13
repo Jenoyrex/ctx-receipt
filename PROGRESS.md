@@ -23,8 +23,22 @@ row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
 
 ## Now
 
-All milestones (Step 0 to M9) are done. What is left needs a person: see "Left for you" at the
-end of this file.
+All milestones (Step 0 to M9) are done, and **0.1.0 is published on npm** (2026-11-13), tagged
+`v0.1.0` on GitHub. What is left needs a person: see "Left for you" at the end of this file.
+
+Release notes:
+
+- Before going public, the commit author email was rewritten to the GitHub private address on
+  all commits (files unchanged) and force-pushed; the repo then went public.
+- npm required two-factor authentication on the account to publish; it was turned on in the
+  website (a security key, "auth-and-writes"). The command-line `npm profile enable-2fa` was
+  refused.
+- npm used staged publishing: the first upload showed only a `0.0.0-stage` placeholder until
+  0.1.0 was released from "Staged Packages". The live 0.1.0 has the same shasum as the local
+  build (`bf3a881…`), and `npx ctx-receipt` from an empty folder printed the same receipt as the
+  repo build.
+- The release workflow now skips `npm publish` when the version is already on npm, so the
+  `v0.1.0` tag run is green. The tag sits on that workflow commit, which changes no package file.
 
 ## Decisions (M6 to M9)
 
@@ -253,8 +267,8 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 - Run `--mcp` against your own servers once, knowing it starts the commands in your config.
   Tests and checks here only ever started the fixture server.
 - Check the Codex and Cursor MCP deferral behaviour in the apps themselves (marked unverified).
-- Decide on the commit author email before making the repo public (it is your Gmail address).
-- Make the repository public; the README image on npmjs.com loads from the repository.
-- Add an `NPM_TOKEN` secret to the repository for the release workflow, then publish (commands
-  in the final report).
-- Optional: add an `author` field to package.json.
+- Done: commit email switched to the GitHub private address.
+- Done: repository public, 0.1.0 published, `v0.1.0` tagged.
+- For automated releases later: add an `NPM_TOKEN` secret (a granular token allowed to publish)
+  so the tag workflow can publish; until then, publish by hand with `npm publish`.
+- Done: `author` set to Jenoyrex.
