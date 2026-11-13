@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "echo": {
+      "command": "node",
+      "args": ["../fake-server.mjs", "--echo", "--token", "sk-FAKE-0000-LEAKCHECK"],
+      "env": { "API_KEY": "sk-FAKE-0000-LEAKCHECK" }
+    },
+    "plain": { "command": "node", "args": ["../fake-server.mjs"] },
+    "loaded": { "command": "node", "args": ["../fake-server.mjs"], "alwaysLoad": true },
+    "hang": { "command": "node", "args": ["../fake-server.mjs", "--hang"] },
+    "missing": { "command": "ctx-receipt-no-such-command-sk-FAKE-0000-LEAKCHECK" },
+    "remote": { "type": "http", "url": "https://mcp.example.com/mcp?key=sk-FAKE-0000-LEAKCHECK" }
+  }
+}

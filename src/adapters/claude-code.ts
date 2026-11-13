@@ -169,7 +169,7 @@ const RESERVED_MCP_NAMES = new Set([
 ]);
 
 /** The ~/.claude.json entry for this project. Keys are paths; on Windows they use "/". */
-function projectEntry(projects: unknown, project: string): Record<string, unknown> {
+export function projectEntry(projects: unknown, project: string): Record<string, unknown> {
   if (!isObject(projects)) return {};
   const norm = (p: string) => {
     const r = resolve(p).replace(/\\/g, "/");

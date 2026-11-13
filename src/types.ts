@@ -13,6 +13,8 @@ export interface Item {
   tokens: number | null;
   /** Short extra info, e.g. an MCP server's transport. Never contains config values. */
   detail?: string;
+  /** MCP servers measured with --mcp: tokens if every tool schema were loaded. */
+  fullTokens?: number;
 }
 
 export interface ScanContext {

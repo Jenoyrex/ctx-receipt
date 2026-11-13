@@ -21,8 +21,9 @@ test("scans a project and prints a receipt", () => {
   expect(r.stdout).toContain("TOTAL ALWAYS LOADED");
 });
 
-test("usage errors exit 2", () => {
-  expect(cli("--bogus").status).toBe(2);
-  expect(cli("does/not/exist").status).toBe(2);
-  expect(cli("--agent", "nope").status).toBe(2);
-});
+test.each([["--bogus"], ["does/not/exist"], ["--agent", "nope"]])(
+  "usage error exits 2: %s",
+  (...args) => {
+    expect(cli(...args).status).toBe(2);
+  },
+);

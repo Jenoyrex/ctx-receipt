@@ -13,12 +13,59 @@ original plan (Step 0, M1 to M9). Last updated 2026-11-12.
 | M3        | Skills (Claude Code, Codex)                                             | Done        |
 | M4        | MCP servers listed statically, secret-safe reading, leak tests          | Done        |
 | M5        | Codex, Cursor, Gemini CLI adapters; `docs/adding-an-agent.md`           | Done        |
-| M6        | `--mcp` live measurement                                                | Not started |
+| M6        | `--mcp` live measurement                                                | In progress |
 | M7        | `--json`, `--md`, `--svg`, `--budget`, grade                            | Not started |
 | M8        | Real README, CONTRIBUTING, issue templates, CHANGELOG, release workflow | Not started |
 | M9        | Release dry run with `npm pack`                                         | Not started |
 
-Current checks: lint, typecheck, and build pass; 45 tests in 9 files pass.
+Current checks: lint, typecheck, and build pass; 61 tests in 10 files pass (three runs in a
+row). CI green on Node 20 and 22 after the lock file fix (run 43269126292).
+
+## Now
+
+M6, task 2: `--mcp` and `--mcp <name>`. `src/mcp/launch.ts` is the only code that reads
+`command`, `args`, `env`; it spawns with stderr ignored, 10 s timeout, and always closes.
+`src/mcp/measure.ts` turns tool lists into two numbers per server (up front, full) using each
+agent's deferral rule. Tests use only `test/fixtures/mcp/fake-server.mjs`. Then commit, push,
+check CI, and move to M7.
+
+## Decisions (M6 to M9)
+
+- Lock file: regenerated from a clean `npm install` (no `node_modules`), which records optional
+  packages for every platform. Only additions; no version changed.
+- Added `@modelcontextprotocol/sdk` 1.32.2 (approved). It brings server-side packages too
+  (express, hono, zod); only the client is used.
+- `--mcp` is loaded lazily: importing the MCP SDK roughly tripled CLI start time.
+- Before launching, `--mcp` prints agent, server name, transport, and config file to stderr, never
+  the command. Start failures report only "failed to start" or "timed out", because spawn errors
+  name the command.
+- Servers get the MCP SDK's default safe environment (PATH, HOME, and similar) plus the `env`
+  from their config. `${VAR}`, `${VAR:-default}` and `${env:VAR}` are expanded (not for Codex,
+  which forwards `env_vars` instead). Servers start in the project directory unless `cwd` is set.
+- All selected servers start in parallel; each has its own 10 s timeout.
+- Up front vs full: Claude Code defers schemas by default (names + server instructions up front).
+  `ENABLE_TOOL_SEARCH=false`, `auto`, `auto:N`, `"alwaysLoad": true` on the server, and
+  `_meta["anthropic/alwaysLoad"]` on a tool count as loaded up front; for `auto` that is the
+  conservative reading. Codex, Cursor, and Gemini CLI: up front = full.
+- Tool filters honored: Codex `enabled_tools`/`disabled_tools`, Gemini `includeTools`/`excludeTools`.
+- vitest `testTimeout` raised to 15 s and the CLI usage-error test split into one spawn per case.
+  The old test ran three CLI processes in one 5 s budget and failed under load once the MCP tests
+  started servers in parallel. No assertion changed.
+- Leak tests checked by planting leaks: a reason that included the server's args made the leak
+  test fail, as it should. On Windows, cross-spawn runs commands through cmd.exe, so a missing
+  command never produces a spawn error; on Linux it would, and its message names the command.
+
+## Unverified
+
+- Cursor `.cursorrules`: not in the current docs; counted as always loaded.
+- Codex MCP deferral: the docs name a "deferred" (tool search) surface and a per-server
+  `omit_tools_from`, but not the default. We assume all schemas load up front.
+- Cursor MCP deferral: not documented. We assume all schemas load up front.
+- Gemini CLI MCP: no deferral documented; tools are registered as function declarations.
+
+## Blocked
+
+Nothing yet.
 
 ## Step 0: name and repository
 

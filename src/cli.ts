@@ -7,7 +7,7 @@ import { adapters } from "./adapters/index.js";
 import { isDir } from "./fs.js";
 import { renderReceipt } from "./render/receipt.js";
 import { scan } from "./scan.js";
-import type { Item } from "./types.js";
+import type { Item, ScanContext } from "./types.js";
 
 // Exit codes: 0 ok, 1 over budget, 2 usage error, 3 scan error.
 const USAGE = 2;
@@ -20,6 +20,7 @@ interface Options {
   user: boolean;
   home?: string;
   agent?: string[];
+  mcp?: true | string;
 }
 
 const program = new Command()
@@ -30,20 +31,43 @@ const program = new Command()
   .option("--agent <name...>", `limit to some agents (${adapters.map((a) => a.id).join(", ")})`)
   .option("--no-user", "skip home-directory config")
   .option("--home <dir>", "override the home directory")
+  .option(
+    "--mcp [name]",
+    "start stdio MCP servers from your config (or only <name>) and measure their tools",
+  )
   .exitOverride((err) => process.exit(err.exitCode === 0 ? 0 : USAGE))
-  .action((path: string, opts: Options) => {
+  .action(async (path: string, opts: Options) => {
     const project = resolve(path);
     if (!isDir(project)) fail(USAGE, `not a directory: ${path}`);
     const unknown = opts.agent?.filter((a) => !adapters.some((x) => x.id === a)) ?? [];
     if (unknown.length > 0) fail(USAGE, `unknown agent: ${unknown.join(", ")}`);
 
+    const ctx: ScanContext = {
+      project,
+      home: resolve(opts.home ?? homedir()),
+      includeUser: opts.user,
+    };
     let items: Item[];
     try {
-      const home = resolve(opts.home ?? homedir());
-      items = scan({ project, home, includeUser: opts.user }, opts.agent);
+      items = scan(ctx, opts.agent);
     } catch (err) {
       fail(SCAN_ERROR, `scan failed: ${(err as Error).message}`);
     }
+
+    if (opts.mcp) {
+      // Loaded only here: the MCP SDK roughly triples startup time.
+      const { describeLaunch, launchable, measureServers } = await import("./mcp/measure.js");
+      const only = typeof opts.mcp === "string" ? opts.mcp : undefined;
+      const targets = launchable(items, only);
+      if (only && targets.length === 0) fail(USAGE, `no stdio MCP server named "${only}"`);
+      if (targets.length === 0) {
+        process.stderr.write("No stdio MCP servers to measure.\n");
+      } else {
+        process.stderr.write(describeLaunch(targets, ctx));
+        await measureServers(targets, ctx);
+      }
+    }
+
     // picocolors alone enables color on Windows and in CI even when piped; also require a TTY.
     const color = pc.isColorSupported && process.stdout.isTTY === true;
     process.stdout.write(renderReceipt(items, { color }));
@@ -54,4 +78,4 @@ function fail(code: number, msg: string): never {
   process.exit(code);
 }
 
-program.parse();
+await program.parseAsync();

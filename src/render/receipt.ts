@@ -26,13 +26,19 @@ export function renderReceipt(items: Item[], opts: { color: boolean }): string {
     const subtotal = sum(mine);
     lines.push(c.bold(labelOf(id).toUpperCase()));
     const unmeasured = items.filter((i) => i.agent === id && i.loading === "unmeasured");
-    for (const i of mine) lines.push(row(`  ${label(i)}`, fmt(i.tokens)));
+    for (const i of mine) {
+      lines.push(row(`  ${label(i)}`, fmt(i.tokens)));
+      if (i.fullTokens !== undefined) {
+        lines.push(c.dim(row("    all schemas, if loaded", `(${fmt(i.fullTokens)})`)));
+      }
+    }
     for (const i of unmeasured) lines.push(row(`  ${label(i)}`, "?"));
     if (mine.length + unmeasured.length === 0) lines.push(c.dim("  (nothing always loaded)"));
     lines.push(row("", "-".repeat(10)));
     lines.push(c.bold(row("  SUBTOTAL", fmt(subtotal))));
     lines.push(c.dim(`  ${((subtotal / WINDOW) * 100).toFixed(1)}% of a 200k window`));
-    if (unmeasured.length > 0) lines.push(c.dim("  ? = not measured, not in subtotal"));
+    if (unmeasured.length > 0)
+      lines.push(c.dim("  ? = not measured (--mcp measures stdio servers)"));
     lines.push("");
   }
 

@@ -1,0 +1,4 @@
+[mcp_servers.codex-echo]
+command = "node"
+args = ["../fake-server.mjs", "--echo", "sk-FAKE-0000-LEAKCHECK"]
+env = { API_KEY = "sk-FAKE-0000-LEAKCHECK" }
