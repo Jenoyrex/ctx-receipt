@@ -43,6 +43,7 @@ own tokenizer gives different numbers. See [How we count](docs/how-we-count.md).
 - [Options](#options)
 - [Use in CI](#use-in-ci)
 - [Supported agents](#supported-agents)
+- [How it compares](#how-it-compares)
 - [Privacy and safety](#privacy-and-safety)
 - [FAQ](#faq)
 - [Limitations](#limitations)
@@ -310,6 +311,26 @@ Each adapter was written from the agent's official documentation, checked on 202
 
 Where the docs disagree or say nothing, we take the reading that counts more, and say so in
 the adapter's source and in [How we count](docs/how-we-count.md).
+
+## How it compares
+
+Other tools measure parts of this. The table was written from each project's own documentation
+in November 2026; this corner of the ecosystem moves quickly, so check before taking it as
+current.
+
+| Tool                     | What it measures                                                                                       | Where it runs               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------- |
+| **ctx-receipt**          | Rules files and their imports, skill listings, custom agents, memory, and MCP, for four agents at once | Before a session, and in CI |
+| Claude Code's `/context` | Claude Code alone, including its system prompt and built-in tools, counted in Claude's own tokenizer   | Inside a session            |
+| mcp-optimizer            | MCP tool schemas, which it can also compress and pre-select to cut tokens                              | A CLI                       |
+| token-lens               | MCP tool definitions, with schema compression and a record of which tools actually get called          | An MCP server               |
+| drskill                  | Skills and MCP tools per agent, ranked by what your past sessions actually invoked                     | A CLI, and CI               |
+| skill-doctor             | Overlapping, duplicated, and risky skills, rather than token budgets                                   | A CLI                       |
+
+If MCP is your only concern, the MCP-focused tools go deeper, and they can rewrite schemas, which
+ctx-receipt does not do. Inside a Claude Code session, `/context` is the ground truth, and the
+receipt's Claude-tokenizer figure is calibrated against it. ctx-receipt is for the total across
+every agent a repository carries, before a session starts and on every pull request.
 
 ## Privacy and safety
 
