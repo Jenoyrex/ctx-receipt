@@ -30,6 +30,21 @@ jobs:
           test "${{ steps.receipt.outputs.grade }}" = "A"
           test "${{ steps.receipt.outputs.total }}" -gt 0
 
+  published-cli:
+    # The action's default: no local build, the CLI comes from npm through npx.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: receipt
+        uses: ./
+        with:
+          path: examples/demo/project
+          budget: "1000"
+      - name: Check the outputs
+        run: |
+          test "${{ steps.receipt.outputs.over-budget }}" = "false"
+          test "${{ steps.receipt.outputs.total }}" -gt 0
+
   over-budget:
     runs-on: ubuntu-latest
     steps:
