@@ -24,7 +24,10 @@ export interface ListedTool {
 export interface Listed {
   tools: ListedTool[];
   instructions: string;
-  /** Claude Code: `"alwaysLoad": true` on the server entry loads all its tools up front. */
+  /**
+   * The server's tools load up front instead of being deferred: Claude Code `"alwaysLoad": true`,
+   * or Codex `omit_tools_from` containing "deferred".
+   */
   serverAlwaysLoad: boolean;
 }
 
@@ -79,7 +82,9 @@ export async function listTools(
       listed: {
         tools: result.tools.filter(toolFilter(item.agent, entry)),
         instructions: result.instructions,
-        serverAlwaysLoad: item.agent === "claude-code" && entry.alwaysLoad === true,
+        serverAlwaysLoad:
+          (item.agent === "claude-code" && entry.alwaysLoad === true) ||
+          (item.agent === "codex" && strings(entry.omit_tools_from).includes("deferred")),
       },
     };
   } catch {

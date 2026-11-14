@@ -340,12 +340,12 @@ The workflow writes a [shields.io endpoint](https://shields.io/badges/endpoint-b
 Each adapter was written from the agent's official documentation, checked on 2026-11-12 and
 2026-11-13. Claude Code was also compared with its own `/context` on a real project.
 
-| Agent       | Rules                                                          | Skills                  | Custom agents and memory | MCP config | MCP up-front cost                   |
-| ----------- | -------------------------------------------------------------- | ----------------------- | ------------------------ | ---------- | ----------------------------------- |
-| Claude Code | verified, compared with `/context`                             | verified                | verified                 | verified   | verified (deferred by default)      |
-| Codex CLI   | verified                                                       | verified                | n/a                      | verified   | **unverified**: assumed all schemas |
-| Cursor      | verified; `.cursorrules` **unverified** (no longer documented) | not supported by Cursor | n/a                      | verified   | **unverified**: assumed all schemas |
-| Gemini CLI  | verified                                                       | verified                | n/a                      | verified   | all schemas; no deferral documented |
+| Agent       | Rules                                                          | Skills                  | Custom agents and memory | MCP config | MCP up-front cost                                         |
+| ----------- | -------------------------------------------------------------- | ----------------------- | ------------------------ | ---------- | --------------------------------------------------------- |
+| Claude Code | verified, compared with `/context`                             | verified                | verified                 | verified   | verified (deferred by default)                            |
+| Codex CLI   | verified                                                       | verified                | n/a                      | verified   | deferred by default (verified in Codex's source)          |
+| Cursor      | verified; `.cursorrules` **unverified** (no longer documented) | not supported by Cursor | n/a                      | verified   | deferred, tool names up front (Cursor's engineering blog) |
+| Gemini CLI  | verified                                                       | verified                | n/a                      | verified   | all schemas; no deferral documented                       |
 
 Where the docs disagree or say nothing, we take the reading that counts more, and say so in
 the adapter's source and in [How we count](docs/how-we-count.md).

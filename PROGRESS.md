@@ -96,6 +96,22 @@ stars first.
 trailer) was rewritten to the owner's identity without the trailer and force-pushed; all 34
 commits on `main` now have one author. GitHub's Contributors box updates on its own schedule.
 
+## Release prep 2026-11-14
+
+- Social preview: uploaded by the owner. Contributors API now lists only Jenoyrex.
+- **Codex MCP deferral, verified from source** (openai/codex at `7924f95`): in
+  `codex-rs/core/src/tools/spec_plan.rs`, an MCP tool with no `omit_tools_from` loses its direct
+  exposure and becomes deferred when the model `supports_search_tool`, and every model in
+  `codex-rs/models-manager/models.json` has it set. Up front, the `tool_search` tool lists each
+  server by name and description (`tool_search_spec.rs`). ctx-receipt now counts one line per
+  server (name plus instructions); `omit_tools_from` with `"deferred"` loads in full.
+- **Cursor MCP deferral, verified from Cursor's engineering blog** ("Dynamic context discovery",
+  2026-01-06): tool descriptions are synced to files and "the agent now only receives a small bit
+  of static context, including names of the tools". ctx-receipt now counts the tool names.
+- The test that asserted "Codex and Cursor load every schema up front" encoded the old
+  assumption; it was replaced by agent-specific tests (including one that reads a real Codex
+  config with `omit_tools_from`), not loosened.
+
 ## Timeline
 
 | Date       | Commit                          | What                                                                   |
@@ -338,7 +354,7 @@ started only the one stdio server, after printing its name, transport, and confi
 
 - Repository: homepage set to the npm page, Discussions enabled, 13 topics.
 - Social preview: `.github/social-preview.png` (1280x640) from `.github/social-preview.html`,
-  rendered with Edge. Uploading it is a manual step (no GitHub API).
+  rendered with Edge. Uploaded by the owner on 2026-11-14 (GitHub has no API for it).
 - GitHub Releases for `v0.1.0`, `v0.1.1`, `v0.1.2`, with notes from the CHANGELOG.
 - Six starter issues from real gaps:
   [#1](https://github.com/Jenoyrex/ctx-receipt/issues/1) GitHub Copilot,
@@ -365,9 +381,11 @@ started only the one stdio server, after printing its name, transport, and confi
 ## Unverified
 
 - Cursor `.cursorrules`: no longer in the docs; counted as always loaded.
-- Codex MCP deferral: the docs mention a "deferred" (tool search) surface and per-server
-  `omit_tools_from` but not the default. We assume all schemas load up front.
-- Cursor MCP deferral: not documented. We assume all schemas load up front.
+- Codex MCP up-front line: deferral itself is verified from Codex's source (see "Release prep
+  2026-11-14"); which text fills each server's description is not settled, so we count the
+  server name plus its instructions.
+- Cursor MCP up-front format: deferral is verified from Cursor's engineering blog; the exact text
+  of the tool names it keeps is not published, so we count each tool name.
 - Gemini CLI MCP: no deferral documented; tools are registered as function declarations.
 - The 1.6 Claude-tokenizer factor comes from one project and one model.
 
@@ -410,15 +428,12 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 
 ## Left for you
 
-- Upload the social preview: Settings > General > Social preview > Edit > upload
-  `.github/social-preview.png` (GitHub has no API for it).
 - Post the launch drafts in `launch/LAUNCH-KIT.md` (local, git-ignored), in the order it gives,
   as yourself.
 - Submit the prepared awesome-list patches: `launch/patches/SUBMIT.md` says where and how for each
   (awesome-claude-code needs at least 100 stars first).
 - Deprecate the stray placeholder version (needs your npm credentials and security key):
   `npm deprecate ctx-receipt@0.0.0-stage "Temporary placeholder from npm staged publishing. Use the latest version."`
-- Check Codex's and Cursor's MCP deferral in the apps themselves (marked unverified).
 - Optional before launch: release 0.2.0 so the action can be pinned to a tag instead of `@main`.
 - Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
 - Consider a `--mcp-timeout` option: shadcn (about 8 s) sometimes misses the fixed 10 s timeout.

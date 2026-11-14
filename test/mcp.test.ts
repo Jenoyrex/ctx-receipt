@@ -8,6 +8,7 @@ import { listTools, TIMEOUT_MS } from "../src/mcp/launch.js";
 import { count, launchable, measureServers } from "../src/mcp/measure.js";
 import { renderReceipt } from "../src/render/receipt.js";
 import { scan } from "../src/scan.js";
+import { estimateTokens } from "../src/tokens.js";
 import type { Item } from "../src/types.js";
 
 const LEAK = /LEAKCHECK|sk-FAKE/i;
@@ -186,10 +187,51 @@ describe("measure", () => {
     expect(oneTool.upFront).toBeLessThan(oneTool.full);
   });
 
-  test("other agents load every schema up front", () => {
-    for (const agent of ["codex", "cursor", "gemini"]) {
-      const c = count(agent, "srv", listed, {});
-      expect(c.upFront).toBe(c.full);
+  test("Codex defers schemas: up front is one line with the server name and instructions", () => {
+    const c = count("codex", "srv", listed, {});
+    expect(c.upFront).toBe(estimateTokens("- srv: Use search first."));
+    expect(c.upFront).toBeLessThan(c.full / 10);
+    const noInstructions = count("codex", "srv", { ...listed, instructions: "" }, {});
+    expect(noInstructions.upFront).toBe(estimateTokens("- srv"));
+  });
+
+  test("Codex loads schemas up front when omit_tools_from includes deferred", () => {
+    const c = count("codex", "srv", { ...listed, serverAlwaysLoad: true }, {});
+    expect(c.upFront).toBe(c.full);
+  });
+
+  test("Cursor defers schemas: up front is the tool names", () => {
+    const c = count("cursor", "srv", listed, {});
+    expect(c.upFront).toBe(estimateTokens("- a\n- b"));
+    expect(c.upFront).toBeLessThan(c.full / 10);
+  });
+
+  test("Gemini CLI loads every schema up front", () => {
+    const c = count("gemini", "srv", listed, {});
+    expect(c.upFront).toBe(c.full);
+  });
+
+  test("a Codex config with omit_tools_from = [deferred] is read by the launcher", async () => {
+    const tmp = mkdtempSync(join(tmpdir(), "ctx-receipt-codex-omit-"));
+    try {
+      const home = join(tmp, "home");
+      mkdirSync(join(home, ".codex"), { recursive: true });
+      const project = join(tmp, "project");
+      mkdirSync(project);
+      const toml = (name: string, extra: string) =>
+        `[mcp_servers.${name}]\ncommand = ${JSON.stringify(process.execPath)}\nargs = [${JSON.stringify(server)}]\n${extra}\n`;
+      writeFileSync(
+        join(home, ".codex", "config.toml"),
+        toml("deferred", "") + toml("direct", 'omit_tools_from = ["deferred"]'),
+      );
+      const ctx = { project, home, includeUser: true };
+      const targets = launchable(scan(ctx, ["codex"]));
+      await measureServers(targets, ctx);
+      const byName = Object.fromEntries(targets.map((t) => [t.name, t]));
+      expect(byName.deferred.tokens).toBeLessThan(byName.deferred.fullTokens ?? 0);
+      expect(byName.direct.tokens).toBe(byName.direct.fullTokens);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
     }
   });
 
