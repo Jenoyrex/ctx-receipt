@@ -28,6 +28,30 @@ checked, and what is left. Last updated 2026-11-13.
 | 0.1.1     | Fixes from comparing with Claude Code's `/context`                 | Done   |
 | 0.1.2     | README polish published to npm                                     | Done   |
 
+## Now: launch-ready (L1 to L5)
+
+**L1, findings dataset: done.** Of the 1,000 most-starred active public repos, 487 ship an agent
+context file; the 50 most-starred of those were measured (`research/select.mjs`,
+`research/scan.mjs`), all 50 successfully. Heaviest agent per repo: **median 1,838 tokens**,
+quartiles 755 and 4,001, max 12,446 (estimates). `research/FINDINGS.md` is generated from
+`research/scan-2026-11-14.json` by `research/summarize.mjs`, and `test/research.test.ts` fails if
+they disagree. Decisions:
+
+- Headline metric: the heaviest agent per repository, not the receipt's cross-agent total, which
+  counts a shared `AGENTS.md` once per agent that reads it.
+- Clones are shallow and sparse, inside the git-ignored `.scan-tmp/` (a safety check refused
+  removing a folder at a drive root), with `core.symlinks=false`, no LFS, no submodules, no
+  repository code run, never `--mcp`, and an empty `--home`; each clone is deleted after its scan.
+- Symlinks: the first run counted symlinked agent files as their 1-to-5-token link text (for
+  example `torvalds/linux`, `huggingface/transformers`). The scan now replaces a symlink whose
+  target is inside the repository with the target's content, as an agent would read it (11
+  resolved, 0 pointing outside), and the full scan was rerun.
+- Generated research files are excluded from Biome, so FINDINGS.md stays byte-identical to the
+  generator's output.
+
+**L2, GitHub Action (next).** `action.yml` at the root, a workflow proving the pass and the
+over-budget failure against `examples/demo`, and the README CI section using it.
+
 ## Timeline
 
 | Date       | Commit                          | What                                                                   |

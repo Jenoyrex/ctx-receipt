@@ -1,0 +1,318 @@
+{
+  "date": "2026-11-14",
+  "method": {
+    "pool": "GitHub search \"stars:>1000 archived:false pushed:>=2026-09-15\", sorted by stars, first 1,000 results",
+    "filter": "default branch has at least one of: AGENTS.md, CLAUDE.md, .claude/CLAUDE.md, CLAUDE.local.md, GEMINI.md, .cursorrules, .cursor/rules, .claude/rules, .claude/skills, .claude/agents, .agents/skills, .gemini/skills; forks excluded",
+    "sample": "the 50 most-starred repositories that pass the filter"
+  },
+  "poolSize": 1000,
+  "eligibleCount": 487,
+  "selected": [
+    {
+      "repo": "morluto/rea",
+      "stars": 457900,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".agents/skills"]
+    },
+    {
+      "repo": "openclaw/openclaw",
+      "stars": 394404,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "vinta/awesome-python",
+      "stars": 334596,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".claude/skills"]
+    },
+    {
+      "repo": "mattpocock/skills",
+      "stars": 323890,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "obra/superpowers",
+      "stars": 317284,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "GEMINI.md"]
+    },
+    {
+      "repo": "affaan-m/ECC",
+      "stars": 302509,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".cursor/rules", ".claude/rules", ".agents/skills"]
+    },
+    {
+      "repo": "deepseek-ai/deepseek-harness",
+      "stars": 280594,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "NousResearch/hermes-agent",
+      "stars": 263244,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "torvalds/linux",
+      "stars": 255607,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "react/react",
+      "stars": 252592,
+      "fork": false,
+      "agentFiles": ["CLAUDE.md", ".claude/skills"]
+    },
+    {
+      "repo": "anomalyco/opencode",
+      "stars": 226700,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "TheAlgorithms/Python",
+      "stars": 226091,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "n8n-io/n8n",
+      "stars": 210424,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".agents/skills"]
+    },
+    {
+      "repo": "firecrawl/firecrawl",
+      "stars": 201596,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "microsoft/vscode",
+      "stars": 195353,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".agents/skills"]
+    },
+    {
+      "repo": "ultraworkers/claw-code",
+      "stars": 194782,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "avelino/awesome-go",
+      "stars": 193797,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".cursorrules"]
+    },
+    {
+      "repo": "DietrichGebert/ponytail",
+      "stars": 190418,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".cursor/rules"]
+    },
+    {
+      "repo": "Significant-Gravitas/AutoGPT",
+      "stars": 188020,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "ollama/ollama",
+      "stars": 186903,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "flutter/flutter",
+      "stars": 181254,
+      "fork": false,
+      "agentFiles": [".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "f/prompts.chat",
+      "stars": 177119,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "twbs/bootstrap",
+      "stars": 175057,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "huggingface/transformers",
+      "stars": 168953,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "langgenius/dify",
+      "stars": 161126,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "clash-verge-rev/clash-verge-rev",
+      "stars": 158270,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
+    },
+    {
+      "repo": "langflow-ai/langflow",
+      "stars": 156615,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", ".cursor/rules", ".agents/skills"]
+    },
+    {
+      "repo": "anthropics/claude-code",
+      "stars": 155584,
+      "fork": false,
+      "agentFiles": ["CLAUDE.md"]
+    },
+    {
+      "repo": "github/spec-kit",
+      "stars": 149705,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "langchain-ai/langchain",
+      "stars": 149471,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "stars": 149146,
+      "fork": false,
+      "agentFiles": ["CLAUDE.md", ".claude/skills"]
+    },
+    {
+      "repo": "Graphify-Labs/graphify",
+      "stars": 147334,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "GEMINI.md"]
+    },
+    {
+      "repo": "Comfy-Org/ComfyUI",
+      "stars": 146714,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "vercel/next.js",
+      "stars": 143506,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", ".claude/skills", ".agents/skills"]
+    },
+    {
+      "repo": "ripienaar/free-for-dev",
+      "stars": 142780,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "garrytan/gstack",
+      "stars": 141477,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "microsoft/PowerToys",
+      "stars": 140960,
+      "fork": false,
+      "agentFiles": [
+        "AGENTS.md",
+        ".claude/CLAUDE.md",
+        ".claude/rules",
+        ".claude/skills",
+        ".claude/agents"
+      ]
+    },
+    {
+      "repo": "excalidraw/excalidraw",
+      "stars": 135646,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "ggml-org/llama.cpp",
+      "stars": 134898,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "rustdesk/rustdesk",
+      "stars": 129367,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "GEMINI.md"]
+    },
+    {
+      "repo": "kubernetes/kubernetes",
+      "stars": 129048,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "react/react-native",
+      "stars": 126915,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "stablyai/orca",
+      "stars": 124460,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "electron/electron",
+      "stars": 123894,
+      "fork": false,
+      "agentFiles": ["CLAUDE.md", ".claude/skills"]
+    },
+    {
+      "repo": "nodejs/node",
+      "stars": 123705,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "microsoft/generative-ai-for-beginners",
+      "stars": 123465,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "rust-lang/rust",
+      "stars": 121890,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "earendil-works/pi",
+      "stars": 121889,
+      "fork": false,
+      "agentFiles": ["AGENTS.md"]
+    },
+    {
+      "repo": "browser-use/browser-use",
+      "stars": 120964,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md"]
+    },
+    {
+      "repo": "JuliusBrussee/caveman",
+      "stars": 119718,
+      "fork": false,
+      "agentFiles": ["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
+    }
+  ]
+}
