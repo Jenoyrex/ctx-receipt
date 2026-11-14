@@ -139,6 +139,22 @@ commits on `main` now have one author. GitHub's Contributors box updates on its 
   lower-cased, the verified MCP-deferral finding added, numbers made consistent (4,753 is
   "about 4,750"), and every X post checked under 280 characters.
 
+## Repository recreated (2026-11-14)
+
+Even after the history rewrite, when the contributors API listed only the owner, the old repo's
+page kept showing `@claude` in its cached Contributors box. At the owner's request the repo was
+recreated under the same name, so every link keeps working:
+
+- The old repo was renamed `ctx-receipt-old` and made private (a backup; not deleted).
+- A new public `Jenoyrex/ctx-receipt` got `main`, `badges`, and tags `v0.1.0` to `v0.1.3`; the same
+  description, homepage, 13 topics, Discussions, and labels; issues #1 to #6 recreated with the
+  same numbers, labels, comment, and state; Releases v0.1.0 to v0.1.3 with identical notes.
+- Checked afterwards: the new page's Contributors box shows only `@Jenoyrex`; CI (four
+  platforms), Action, and Badge pass; the action resolves at `@v0.1.3`; the CI and live badges,
+  the receipt image, npm's repository link, and the three awesome-list PRs all work.
+- Not carried over: the social preview image (no API; the owner re-uploads it), and the old
+  repo's traffic history.
+
 ## Timeline
 
 | Date       | Commit                          | What                                                                   |
