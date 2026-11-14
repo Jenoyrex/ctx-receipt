@@ -145,15 +145,16 @@ Even after the history rewrite, when the contributors API listed only the owner,
 page kept showing `@claude` in its cached Contributors box. At the owner's request the repo was
 recreated under the same name, so every link keeps working:
 
-- The old repo was renamed `ctx-receipt-old` and made private (a backup; not deleted).
+- The old repo was renamed `ctx-receipt-old` and made private as a backup, then deleted by the
+  owner on 2026-11-14 after checking the new repo had all of its commits, tags, releases, and issues.
 - A new public `Jenoyrex/ctx-receipt` got `main`, `badges`, and tags `v0.1.0` to `v0.1.3`; the same
   description, homepage, 13 topics, Discussions, and labels; issues #1 to #6 recreated with the
   same numbers, labels, comment, and state; Releases v0.1.0 to v0.1.3 with identical notes.
 - Checked afterwards: the new page's Contributors box shows only `@Jenoyrex`; CI (four
   platforms), Action, and Badge pass; the action resolves at `@v0.1.3`; the CI and live badges,
   the receipt image, npm's repository link, and the three awesome-list PRs all work.
-- Not carried over: the social preview image (no API; the owner re-uploads it), and the old
-  repo's traffic history.
+- The social preview image was re-uploaded by the owner (GitHub reports a custom image).
+- Not carried over: the old repo's traffic history.
 
 ## Timeline
 
