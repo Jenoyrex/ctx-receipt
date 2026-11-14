@@ -82,7 +82,19 @@ npm deprecate ctx-receipt@0.0.0-stage "Temporary placeholder from npm staged pub
 Known issue found during L4: shadcn starts in about 8 s, close to ctx-receipt's fixed 10 s `--mcp`
 timeout, so it sometimes times out under load. A `--mcp-timeout <seconds>` option would help.
 
-**L5, launch preparation (next).**
+**L5, launch preparation: done (nothing posted, no PRs opened).** `launch/LAUNCH-KIT.md`
+(git-ignored) is rewritten around the L1 data: Show HN, two Reddit posts, an X thread, LinkedIn,
+and a Dev.to outline, with a table tracing every figure to FINDINGS.md or a run on the owner's
+setup; a script confirmed each findings number is present in FINDINGS.md, and no placeholders
+remain. `launch/patches/` holds a one-line, single-file patch and a local `add-ctx-receipt`
+branch for RoggeOhta/awesome-codex-cli, Piebald-AI/awesome-gemini-cli, and
+ai-for-developers/awesome-ai-coding-tools, each matching that list's format and section, plus
+`SUBMIT.md` with where and how to submit. hesreallyhim/awesome-claude-code needs at least 100
+stars first.
+
+**Also done in this round:** commit `ed4eec3` (authored as "Claude", with a Co-Authored-By
+trailer) was rewritten to the owner's identity without the trailer and force-pushed; all 34
+commits on `main` now have one author. GitHub's Contributors box updates on its own schedule.
 
 ## Timeline
 
