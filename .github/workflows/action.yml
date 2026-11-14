@@ -1,0 +1,53 @@
+name: Action
+
+# Runs this repository's own GitHub Action (action.yml) against examples/demo, with the CLI
+# built from this commit, and proves both outcomes: under budget passes, over budget fails.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  under-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - id: receipt
+        uses: ./
+        with:
+          path: examples/demo/project
+          budget: "1000"
+          version: local
+      - name: Check the outputs
+        run: |
+          test "${{ steps.receipt.outputs.over-budget }}" = "false"
+          test "${{ steps.receipt.outputs.grade }}" = "A"
+          test "${{ steps.receipt.outputs.total }}" -gt 0
+
+  over-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - id: receipt
+        uses: ./
+        continue-on-error: true
+        with:
+          path: examples/demo/project
+          budget: "10"
+          version: local
+      - name: The over-budget run must have failed
+        run: |
+          test "${{ steps.receipt.outcome }}" = "failure"
+          test "${{ steps.receipt.outputs.over-budget }}" = "true"

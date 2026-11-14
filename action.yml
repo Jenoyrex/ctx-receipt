@@ -1,0 +1,137 @@
+name: ctx-receipt
+description: "See what AI coding agents pre-load into context, and fail the check when it grows past a budget."
+author: Jenoyrex
+branding:
+  icon: file-text
+  color: orange
+
+inputs:
+  path:
+    description: "Folder to scan, relative to the repository root."
+    default: "."
+  budget:
+    description: "Fail when the total always-loaded tokens (estimate) are over this number. Empty means report only."
+    default: ""
+  agent:
+    description: "Only these agents, separated by spaces (claude-code, codex, cursor, gemini). Empty means all."
+    default: ""
+  window:
+    description: "Context window in tokens, for percentages and skill listing caps. Empty means the CLI default (200000)."
+    default: ""
+  no-user:
+    description: 'Skip home-directory config. Keep "true" in CI so only repository files count.'
+    default: "true"
+  comment:
+    description: 'Post the receipt as a pull request comment ("true" or "false"). Needs `pull-requests: write`.'
+    default: "false"
+  version:
+    description: 'ctx-receipt version from npm, or "local" to run dist/cli.js from this action''s own checkout.'
+    default: "latest"
+  github-token:
+    description: "Token used to post the pull request comment."
+    default: ${{ github.token }}
+
+outputs:
+  total:
+    description: "Total always-loaded tokens (estimate)."
+    value: ${{ steps.receipt.outputs.total }}
+  grade:
+    description: "Letter grade (based on the heaviest agent)."
+    value: ${{ steps.receipt.outputs.grade }}
+  over-budget:
+    description: '"true" when the total is over the budget.'
+    value: ${{ steps.receipt.outputs.over-budget }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - id: receipt
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_BUDGET: ${{ inputs.budget }}
+        INPUT_AGENT: ${{ inputs.agent }}
+        INPUT_WINDOW: ${{ inputs.window }}
+        INPUT_NO_USER: ${{ inputs.no-user }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        set -uo pipefail
+        if [ "$INPUT_VERSION" = "local" ]; then
+          cli=(node "$GITHUB_ACTION_PATH/dist/cli.js")
+        else
+          cli=(npx --yes "ctx-receipt@$INPUT_VERSION")
+        fi
+        args=("$INPUT_PATH")
+        [ "$INPUT_NO_USER" = "true" ] && args+=(--no-user)
+        [ -n "$INPUT_AGENT" ] && args+=(--agent $INPUT_AGENT)
+        [ -n "$INPUT_WINDOW" ] && args+=(--window "$INPUT_WINDOW")
+
+        "${cli[@]}" "${args[@]}" --json > "$RUNNER_TEMP/ctx-receipt.json"
+        "${cli[@]}" "${args[@]}" > "$RUNNER_TEMP/ctx-receipt.txt"
+        status=0
+        if [ -n "$INPUT_BUDGET" ]; then
+          "${cli[@]}" "${args[@]}" --budget "$INPUT_BUDGET" > /dev/null || status=$?
+        fi
+
+        total=$(node -p "require(process.argv[1]).totalAlwaysLoaded" "$RUNNER_TEMP/ctx-receipt.json")
+        grade=$(node -p "require(process.argv[1]).grade" "$RUNNER_TEMP/ctx-receipt.json")
+        over=false
+        [ "$status" = "1" ] && over=true
+        {
+          echo "total=$total"
+          echo "grade=$grade"
+          echo "over-budget=$over"
+        } >> "$GITHUB_OUTPUT"
+        {
+          echo "### Context receipt"
+          echo
+          echo '```'
+          cat "$RUNNER_TEMP/ctx-receipt.txt"
+          echo '```'
+          if [ -n "$INPUT_BUDGET" ]; then
+            echo
+            echo "Budget: $INPUT_BUDGET tokens. Total always loaded: $total (estimate). Over budget: $over."
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"
+        echo "$status" > "$RUNNER_TEMP/ctx-receipt.status"
+        cat "$RUNNER_TEMP/ctx-receipt.txt"
+
+    - if: inputs.comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        body="$RUNNER_TEMP/ctx-receipt-comment.md"
+        {
+          echo "<!-- ctx-receipt -->"
+          echo "### Context receipt"
+          echo
+          echo '```'
+          cat "$RUNNER_TEMP/ctx-receipt.txt"
+          echo '```'
+        } > "$body"
+        existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+          --jq '[.[] | select(.body | startswith("<!-- ctx-receipt -->"))][0].id // empty')
+        if [ -n "$existing" ]; then
+          gh api -X PATCH "repos/$REPO/issues/comments/$existing" -F "body=@$body" > /dev/null
+        else
+          gh api -X POST "repos/$REPO/issues/$PR/comments" -F "body=@$body" > /dev/null
+        fi
+
+    - shell: bash
+      run: |
+        status=$(cat "$RUNNER_TEMP/ctx-receipt.status")
+        if [ "$status" = "1" ]; then
+          echo "::error title=ctx-receipt::Always-loaded context is over the budget (see the job summary)."
+          exit 1
+        elif [ "$status" != "0" ]; then
+          echo "::error title=ctx-receipt::ctx-receipt failed (exit $status)."
+          exit "$status"
+        fi
