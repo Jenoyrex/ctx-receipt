@@ -110,7 +110,24 @@ commits on `main` now have one author. GitHub's Contributors box updates on its 
   of static context, including names of the tools". ctx-receipt now counts the tool names.
 - The test that asserted "Codex and Cursor load every schema up front" encoded the old
   assumption; it was replaced by agent-specific tests (including one that reads a real Codex
-  config with `omit_tools_from`), not loosened.
+  config with `omit_tools_from`), not loosened. Issue #6 answered with the sources and closed.
+- `--mcp-timeout <seconds>` added (default unchanged at 10) after the owner's shadcn server,
+  which starts in 6 to 13 s depending on load, sometimes missed the fixed 10 s limit.
+- CI now also runs on macOS and Windows (Node 22); all four jobs passed on the first run.
+- 0.1.3 prepared (version, CHANGELOG, README action pin `@v0.1.3`); waiting for the owner to
+  publish, then the tag is pushed.
+- Release workflow switched from an `NPM_TOKEN` secret to npm trusted publishing (npm's own
+  notice says tokens that bypass 2FA are being restricted for publishing). Not exercised yet: it
+  needs the one-time Trusted Publisher setting on npmjs.com and a tag for a new version.
+- Awesome lists: PRs opened on RoggeOhta/awesome-codex-cli (#606) and
+  ai-for-developers/awesome-ai-coding-tools (#1277), one line each, author disclosed. The Gemini
+  list's guide says PRs are merged only if the author has starred their repo; held for the
+  owner's decision.
+- The npm sign-in on this machine had expired (401), so deprecating `0.0.0-stage` waits for the
+  owner to sign in.
+- Launch kit reviewed: a "before you post" checklist (0.1.3 live first), the Show HN title
+  lower-cased, the verified MCP-deferral finding added, numbers made consistent (4,753 is
+  "about 4,750"), and every X post checked under 280 characters.
 
 ## Timeline
 
