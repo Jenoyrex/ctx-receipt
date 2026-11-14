@@ -121,8 +121,9 @@ commits on `main` now have one author. GitHub's Contributors box updates on its 
   needs the one-time Trusted Publisher setting on npmjs.com and a tag for a new version.
 - Awesome lists: PRs opened on RoggeOhta/awesome-codex-cli (#606) and
   ai-for-developers/awesome-ai-coding-tools (#1277), one line each, author disclosed. The Gemini
-  list's guide says PRs are merged only if the author has starred their repo; held for the
-  owner's decision.
+  list's guide says PRs are merged only if the author has starred their repo; at the owner's
+  request the repo was starred and Piebald-AI/awesome-gemini-cli (#358) was opened with their PR
+  template.
 - The npm sign-in on this machine had expired (401), so deprecating `0.0.0-stage` waits for the
   owner to sign in.
 - Launch kit reviewed: a "before you post" checklist (0.1.3 live first), the Show HN title
