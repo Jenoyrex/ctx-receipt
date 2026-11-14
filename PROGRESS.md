@@ -5,11 +5,16 @@ checked, and what is left. Last updated 2026-11-13.
 
 ## Where things stand
 
-- **Published:** [`ctx-receipt` on npm](https://www.npmjs.com/package/ctx-receipt), latest **0.1.2**. Versions 0.1.0, 0.1.1, and 0.1.2 are live and byte-identical to their local builds (shasums `bf3a881…`, `8b78d63…`, `547ca3e…`).
+- **Published:** [`ctx-receipt` on npm](https://www.npmjs.com/package/ctx-receipt), latest
+  **0.1.3**. Versions 0.1.0 to 0.1.3 are live and byte-identical to their local builds (shasums
+  `bf3a881…`, `8b78d63…`, `547ca3e…`, `f0a72ef…`). The `0.0.0-stage` placeholder is deprecated.
 - **Repository:** [github.com/Jenoyrex/ctx-receipt](https://github.com/Jenoyrex/ctx-receipt),
-  public, tags `v0.1.0`, `v0.1.1`, and `v0.1.2`.
-- **Checks:** lint, typecheck, and build pass; **92 tests in 13 files** pass. CI passes on Node 20
-  and 22, including a step that packs the tarball, installs it in an empty folder, and runs it.
+  public, tags and GitHub Releases `v0.1.0` to `v0.1.3` (latest `v0.1.3`). The GitHub Action is
+  usable as `Jenoyrex/ctx-receipt@v0.1.3`.
+- **Checks:** lint, typecheck, and build pass; **102 tests in 14 files** pass. CI passes on Linux
+  (Node 20 and 22), macOS, and Windows (Node 22), including a step that packs the tarball,
+  installs it in an empty folder, and runs it. The Action workflow tests the built CLI (pass and
+  over-budget failure) and the published CLI through npx; the Badge workflow publishes the badge.
 - **Blocked:** nothing.
 
 | Milestone | What                                                               | Status |
@@ -114,8 +119,12 @@ commits on `main` now have one author. GitHub's Contributors box updates on its 
 - `--mcp-timeout <seconds>` added (default unchanged at 10) after the owner's shadcn server,
   which starts in 6 to 13 s depending on load, sometimes missed the fixed 10 s limit.
 - CI now also runs on macOS and Windows (Node 22); all four jobs passed on the first run.
-- 0.1.3 prepared (version, CHANGELOG, README action pin `@v0.1.3`); waiting for the owner to
-  publish, then the tag is pushed.
+- **0.1.3 released.** The owner published it (after signing in again: npm browser sign-ins
+  expire quickly) and deprecated `0.0.0-stage`; the registry confirms both, and 0.1.3 matches the
+  local build (`f0a72ef…`). Tag `v0.1.3` pushed; its release run passed and skipped publishing as
+  designed. `npx ctx-receipt` from an empty folder printed 0.1.3 with output identical to the repo
+  build. The Action workflow gained a `published-cli` job that runs the action with the npm
+  package through npx (it passed). GitHub Release v0.1.3 created from the CHANGELOG.
 - Release workflow switched from an `NPM_TOKEN` secret to npm trusted publishing (npm's own
   notice says tokens that bypass 2FA are being restricted for publishing). Not exercised yet: it
   needs the one-time Trusted Publisher setting on npmjs.com and a tag for a new version.
@@ -450,8 +459,6 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
   as yourself.
 - Submit the prepared awesome-list patches: `launch/patches/SUBMIT.md` says where and how for each
   (awesome-claude-code needs at least 100 stars first).
-- Deprecate the stray placeholder version (needs your npm credentials and security key):
-  `npm deprecate ctx-receipt@0.0.0-stage "Temporary placeholder from npm staged publishing. Use the latest version."`
 - Optional before launch: release 0.2.0 so the action can be pinned to a tag instead of `@main`.
 - Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
 - Consider a `--mcp-timeout` option: shadcn (about 8 s) sometimes misses the fixed 10 s timeout.
