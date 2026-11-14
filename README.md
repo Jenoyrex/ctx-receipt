@@ -201,8 +201,8 @@ ctx-receipt does that only when you pass `--mcp`:
 - Before starting anything, it prints each server's agent, name, transport, and config file. It
   never prints the command, its arguments, or its environment.
 - The server's own error output is discarded.
-- Each server has 10 seconds to list its tools, and is shut down afterwards (or when the time
-  runs out).
+- Each server has 10 seconds to list its tools (`--mcp-timeout <seconds>` changes that, for
+  servers that start slowly), and is shut down afterwards (or when the time runs out).
 - `--mcp <name>` starts only the server with that name.
 
 Each measured server shows two numbers: what the agent loads **up front** (counted in the total),
@@ -264,18 +264,19 @@ paths never appear.
 
 ## Options
 
-| Option              | What it does                                                         |
-| ------------------- | -------------------------------------------------------------------- |
-| `[path]`            | Project to scan. Default: the current folder                         |
-| `--agent <name...>` | Only these agents: `claude-code`, `codex`, `cursor`, `gemini`        |
-| `--no-user`         | Skip home-directory config                                           |
-| `--home <dir>`      | Use another folder as home                                           |
-| `--mcp [name]`      | Start stdio MCP servers (or only `name`) and measure their tools     |
-| `--json`            | Print a JSON report to stdout instead of the receipt                 |
-| `--md <file>`       | Also write a Markdown report                                         |
-| `--svg <file>`      | Also write a shareable SVG card. It shows totals only, no file names |
-| `--budget <tokens>` | Exit 1 if the total always loaded is over `tokens`                   |
-| `--window <tokens>` | Context window for percentages and listing caps. Default: 200000     |
+| Option                    | What it does                                                         |
+| ------------------------- | -------------------------------------------------------------------- |
+| `[path]`                  | Project to scan. Default: the current folder                         |
+| `--agent <name...>`       | Only these agents: `claude-code`, `codex`, `cursor`, `gemini`        |
+| `--no-user`               | Skip home-directory config                                           |
+| `--home <dir>`            | Use another folder as home                                           |
+| `--mcp [name]`            | Start stdio MCP servers (or only `name`) and measure their tools     |
+| `--mcp-timeout <seconds>` | How long each MCP server gets to list its tools. Default: 10         |
+| `--json`                  | Print a JSON report to stdout instead of the receipt                 |
+| `--md <file>`             | Also write a Markdown report                                         |
+| `--svg <file>`            | Also write a shareable SVG card. It shows totals only, no file names |
+| `--budget <tokens>`       | Exit 1 if the total always loaded is over `tokens`                   |
+| `--window <tokens>`       | Context window for percentages and listing caps. Default: 200000     |
 
 Exit codes: `0` ok, `1` over budget, `2` usage error, `3` scan error (for example, a config file
 that is not valid JSON or TOML).

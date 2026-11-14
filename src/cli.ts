@@ -32,6 +32,7 @@ interface Options {
   svg?: string;
   budget?: string;
   window?: string;
+  mcpTimeout?: string;
 }
 
 const program = new Command()
@@ -45,6 +46,10 @@ const program = new Command()
   .option(
     "--mcp [name]",
     "start stdio MCP servers from your config (or only <name>) and measure their tools",
+  )
+  .option(
+    "--mcp-timeout <seconds>",
+    "how long each MCP server gets to list its tools (default: 10)",
   )
   .option("--json", "print a JSON report to stdout instead of the receipt")
   .option("--md <file>", "also write a Markdown report")
@@ -70,6 +75,11 @@ const program = new Command()
       fail(USAGE, `--window needs a whole number of tokens, got "${opts.window}"`);
     }
 
+    const mcpTimeout = opts.mcpTimeout === undefined ? undefined : Number(opts.mcpTimeout);
+    if (mcpTimeout !== undefined && !(Number.isFinite(mcpTimeout) && mcpTimeout > 0)) {
+      fail(USAGE, `--mcp-timeout needs a number of seconds, got "${opts.mcpTimeout}"`);
+    }
+
     const ctx: ScanContext = {
       project,
       window,
@@ -93,7 +103,11 @@ const program = new Command()
         process.stderr.write("No stdio MCP servers to measure.\n");
       } else {
         process.stderr.write(describeLaunch(targets, ctx));
-        await measureServers(targets, ctx);
+        await measureServers(
+          targets,
+          ctx,
+          mcpTimeout === undefined ? undefined : Math.round(mcpTimeout * 1000),
+        );
       }
     }
 

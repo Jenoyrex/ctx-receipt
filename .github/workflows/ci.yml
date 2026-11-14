@@ -7,10 +7,21 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    name: ci (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         node: [20, 22]
+        include:
+          - os: macos-latest
+            node: 22
+          - os: windows-latest
+            node: 22
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

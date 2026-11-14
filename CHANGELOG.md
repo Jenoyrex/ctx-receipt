@@ -12,6 +12,8 @@ All notable changes are listed here. Versions follow [Semantic Versioning](https
 - Findings dataset: `research/` holds the scripts, the raw results, and `FINDINGS.md`, measuring
   what popular repositories pre-load.
 - README: the "How it compares" section now lists only comparisons we could verify.
+- New `--mcp-timeout <seconds>` option for MCP servers that start slowly. The default stays 10.
+- CI now also runs on macOS and Windows (Node 22), besides Linux on Node 20 and 22.
 - `--mcp` for Codex and Cursor: both defer MCP tool schemas by default, so the up-front number is
   now one line per server (Codex) or the tool names (Cursor) instead of every schema. Verified in
   Codex's source and in Cursor's engineering blog; previously both assumed all schemas.

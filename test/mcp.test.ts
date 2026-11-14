@@ -67,6 +67,19 @@ describe("--mcp on the CLI", () => {
     expect(one.stdout).toMatch(/mcp echo \(stdio\) +\?/);
   });
 
+  test("--mcp-timeout shortens the wait for a server that hangs", () => {
+    const started = Date.now();
+    const r = cli(...fixture, "--agent", "claude-code", "--mcp", "hang", "--mcp-timeout", "1");
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/mcp hang \(stdio, timed out\) +\?/);
+    expect(Date.now() - started).toBeLessThan(9_000); // well under the 10 s default
+  });
+
+  test("--mcp-timeout must be a positive number of seconds", () => {
+    expect(cli(...fixture, "--mcp", "plain", "--mcp-timeout", "abc").status).toBe(2);
+    expect(cli(...fixture, "--mcp", "plain", "--mcp-timeout", "0").status).toBe(2);
+  });
+
   test("--mcp <unknown> is a usage error", () => {
     expect(cli(...fixture, "--mcp", "nope").status).toBe(2);
   });
