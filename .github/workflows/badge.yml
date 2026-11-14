@@ -1,0 +1,63 @@
+name: Badge
+
+# Measures this repository with the CLI built from this commit and publishes a shields.io
+# endpoint file to the `badges` branch. The README badge reads that file through shields.io.
+# This job never fails the build: every step may fail without affecting other workflows.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: badge
+  cancel-in-progress: true
+
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Measure this repository
+        run: node dist/cli.js . --no-user --json > "$RUNNER_TEMP/report.json"
+      - name: Write the shields.io endpoint file
+        run: |
+          node -e '
+            const r = require(process.argv[1]);
+            const colors = { A: "brightgreen", B: "green", C: "yellow", D: "orange", F: "red" };
+            const badge = {
+              schemaVersion: 1,
+              label: "pre-loaded context",
+              message: `${r.totalAlwaysLoaded.toLocaleString("en-US")} tokens · ${r.grade}`,
+              color: colors[r.grade] ?? "lightgrey",
+            };
+            require("fs").writeFileSync(process.argv[2], JSON.stringify(badge) + "\n");
+          ' "$RUNNER_TEMP/report.json" "$RUNNER_TEMP/ctx-receipt.json"
+          cat "$RUNNER_TEMP/ctx-receipt.json"
+      - name: Commit it to the badges branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth=1 origin badges 2>/dev/null; then
+            git switch -C badges FETCH_HEAD
+          else
+            git switch --orphan badges
+            git rm -rf --quiet . || true
+          fi
+          cp "$RUNNER_TEMP/ctx-receipt.json" ctx-receipt.json
+          git add ctx-receipt.json
+          if git diff --cached --quiet; then
+            echo "Badge unchanged."
+          else
+            git commit -m "Update badge for ${GITHUB_SHA::7}"
+            git push origin badges
+          fi
