@@ -256,6 +256,15 @@ started only the one stdio server, after printing its name, transport, and confi
   and `cmd.exe` chain (the shadcn processes still running belonged to the Claude Code app).
   On Windows a timed-out run takes about 20 to 40 s in all, because stopping the chain is slower.
 - Claude Code pre-loads 4,658 tokens there (estimate), about 7,453 in Claude's tokenizer.
+- **shadcn fixed (2026-11-14).** Cause: `npx shadcn@latest mcp` checks the npm registry on every
+  start and goes through `cmd.exe`; answering `initialize` took 13.7 s. Of what remains, about
+  5 s is loading shadcn's own code and about 3 s a network call it makes at startup. Fix:
+  installed `shadcn@4.23.0` globally and re-added the server with `claude mcp` as
+  `node <global>/shadcn/dist/index.js mcp`; it answers in about 8 s and Claude Code reports it
+  connected. ctx-receipt now measures it: 95 tokens up front, 1,003 if all schemas loaded
+  (Claude Code total 4,753, about 7,605 in Claude's tokenizer). The previous config is backed
+  up at `~/.claude.json.bak-before-shadcn-fix`. To update shadcn later:
+  `npm install --global shadcn@latest`.
 
 ## Launch preparation
 
@@ -338,8 +347,6 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 - Launch: post the drafts in `launch/LAUNCH-KIT.md` (local, git-ignored) in the order it gives,
   then submit to the awesome lists it names once there is traction (awesome-claude-code needs
   at least 100 stars).
-- Fix or remove the `shadcn` MCP server in `~/.claude.json`: it times out on every start, in
-  ctx-receipt and in Claude Code itself.
 - Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
 - Check Codex's and Cursor's MCP deferral in the apps themselves (marked unverified).
 - For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish) so the
