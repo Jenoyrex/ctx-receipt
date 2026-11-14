@@ -49,8 +49,40 @@ they disagree. Decisions:
 - Generated research files are excluded from Biome, so FINDINGS.md stays byte-identical to the
   generator's output.
 
-**L2, GitHub Action (next).** `action.yml` at the root, a workflow proving the pass and the
-over-budget failure against `examples/demo`, and the README CI section using it.
+**L2, GitHub Action: done.** `action.yml` (composite): inputs `path`, `budget`, `agent`, `window`,
+`no-user`, `comment`, `version`, `github-token`; outputs `total`, `grade`, `over-budget`; writes
+the receipt to the job summary, optionally comments on the pull request (updating its own
+comment), and fails over budget. `.github/workflows/action.yml` runs it against `examples/demo`
+with the CLI built from the commit: the under-budget job passes, and the over-budget job's action
+step fails as designed ("over budget: 204 tokens always loaded (estimate) > 10"), which the job
+asserts. Biome caught a YAML error (an unquoted description containing a colon) before the first
+push. The README documents it with `@main`, because no tag contains `action.yml` yet.
+
+**L3, live badge: done.** `.github/workflows/badge.yml` measures this repository on each push to
+`main` and commits a shields.io endpoint file to the `badges` branch (as `github-actions[bot]`,
+on a non-default branch, so it does not count as a contributor); the job is `continue-on-error`.
+It renders as "pre-loaded context: 0 tokens · A": this repository ships no agent files, and
+adding one only for the badge would change the `examples/demo` receipt, since agents read parent
+folders. The README shows the badge and a copy-paste snippet.
+
+**L4, debt and consistency: done.** Every shell command in the README was run as written (with
+`path/to/project` replaced by the demo); all exit 0. CHANGELOG has an "Unreleased" section for the
+action, the badge, and the dataset. The README's "How it compares" section (added by another
+session) named four tools; npm and GitHub showed that `mcp-optimizer` is a Lighthouse tool,
+`drskill` does not exist, and `token-lens` is a 0-star repository, so only the verifiable
+comparison with `/context` remains. The README links to the findings without copying numbers.
+
+Deprecating the stray placeholder version needs your npm credentials and security key, so it was
+not run. The command:
+
+```bash
+npm deprecate ctx-receipt@0.0.0-stage "Temporary placeholder from npm staged publishing. Use the latest version."
+```
+
+Known issue found during L4: shadcn starts in about 8 s, close to ctx-receipt's fixed 10 s `--mcp`
+timeout, so it sometimes times out under load. A `--mcp-timeout <seconds>` option would help.
+
+**L5, launch preparation (next).**
 
 ## Timeline
 

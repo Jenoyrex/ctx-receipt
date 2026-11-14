@@ -4,6 +4,7 @@
 [![npm](https://img.shields.io/npm/v/ctx-receipt)](https://www.npmjs.com/package/ctx-receipt)
 [![Node.js](https://img.shields.io/node/v/ctx-receipt)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![pre-loaded context](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Jenoyrex/ctx-receipt/badges/ctx-receipt.json)](#live-badge)
 
 See what your AI coding agent loads into context before you type a word. A token receipt for
 your rules files, skills, and MCP servers.
@@ -31,6 +32,10 @@ own tokenizer gives different numbers. See [How we count](docs/how-we-count.md).
 - **Shareable.** Write a receipt card with `--svg`, a report with `--md`, or JSON with `--json`.
 - **Safe with secrets.** MCP configs hold API keys; ctx-receipt never prints them, and its tests
   prove it.
+
+**What do popular projects pre-load?** We measured the 50 most-starred active repositories that
+ship agent context files. The distribution, method, raw data, and scripts are in
+[research/FINDINGS.md](research/FINDINGS.md).
 
 ## Contents
 
@@ -277,25 +282,58 @@ that is not valid JSON or TOML).
 
 ## Use in CI
 
-Keep your project's pre-loaded context in check on every pull request:
+Keep your project's pre-loaded context in check on every pull request with the GitHub Action:
 
 ```yaml
 # .github/workflows/context-budget.yml
 name: Context budget
 on: [pull_request]
+permissions:
+  contents: read
+  pull-requests: write # only needed for comment: "true"
 jobs:
   ctx-receipt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: Jenoyrex/ctx-receipt@main
         with:
-          node-version: 22
-      - run: npx ctx-receipt --no-user --budget 8000
+          budget: "8000"
+          comment: "true"
 ```
 
-`--no-user` keeps the check to what is in the repository. The step fails when the total always
-loaded is over the budget. Add `--json > ctx-receipt.json` to keep a machine-readable report.
+The receipt goes to the job summary (and, with `comment: "true"`, to a pull request comment that
+is updated rather than repeated). The step fails when the total always loaded is over `budget`.
+
+| Input     | Default  | Meaning                                                   |
+| --------- | -------- | --------------------------------------------------------- |
+| `path`    | `.`      | Folder to scan                                            |
+| `budget`  | empty    | Fail over this many tokens (estimate); empty only reports |
+| `agent`   | empty    | Only these agents, space-separated                        |
+| `window`  | empty    | Context window for percentages and listing caps           |
+| `no-user` | `true`   | Count repository files only                               |
+| `comment` | `false`  | Post the receipt on the pull request                      |
+| `version` | `latest` | ctx-receipt version from npm                              |
+
+Outputs: `total`, `grade`, `over-budget`. Without the action, the same check is one line:
+`npx ctx-receipt --no-user --budget 8000`.
+
+### Live badge
+
+This repository's badge:
+[![pre-loaded context](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Jenoyrex/ctx-receipt/badges/ctx-receipt.json)](https://github.com/Jenoyrex/ctx-receipt/blob/main/.github/workflows/badge.yml)
+(ctx-receipt's own repository ships no agent files, so it reads 0).
+
+To add one to yours, copy [`.github/workflows/badge.yml`](.github/workflows/badge.yml), replace
+the two build steps and `node dist/cli.js` with `npx ctx-receipt`, and add this to your README,
+with your own owner and repository:
+
+```markdown
+[![pre-loaded context](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/badges/ctx-receipt.json)](https://github.com/Jenoyrex/ctx-receipt)
+```
+
+The workflow writes a [shields.io endpoint](https://shields.io/badges/endpoint-badge) file to a
+`badges` branch on each push to `main`; there is no server. It never fails your build.
 
 ## Supported agents
 
@@ -314,23 +352,16 @@ the adapter's source and in [How we count](docs/how-we-count.md).
 
 ## How it compares
 
-Other tools measure parts of this. The table was written from each project's own documentation
-in November 2026; this corner of the ecosystem moves quickly, so check before taking it as
-current.
-
-| Tool                     | What it measures                                                                                       | Where it runs               |
+| Tool                     | What it shows                                                                                          | Where it runs               |
 | ------------------------ | ------------------------------------------------------------------------------------------------------ | --------------------------- |
 | **ctx-receipt**          | Rules files and their imports, skill listings, custom agents, memory, and MCP, for four agents at once | Before a session, and in CI |
 | Claude Code's `/context` | Claude Code alone, including its system prompt and built-in tools, counted in Claude's own tokenizer   | Inside a session            |
-| mcp-optimizer            | MCP tool schemas, which it can also compress and pre-select to cut tokens                              | A CLI                       |
-| token-lens               | MCP tool definitions, with schema compression and a record of which tools actually get called          | An MCP server               |
-| drskill                  | Skills and MCP tools per agent, ranked by what your past sessions actually invoked                     | A CLI, and CI               |
-| skill-doctor             | Overlapping, duplicated, and risky skills, rather than token budgets                                   | A CLI                       |
 
-If MCP is your only concern, the MCP-focused tools go deeper, and they can rewrite schemas, which
-ctx-receipt does not do. Inside a Claude Code session, `/context` is the ground truth, and the
-receipt's Claude-tokenizer figure is calibrated against it. ctx-receipt is for the total across
-every agent a repository carries, before a session starts and on every pull request.
+Inside a Claude Code session, `/context` is the ground truth; ctx-receipt's Claude-tokenizer
+figure is calibrated against it (see [How we count](docs/how-we-count.md#compared-with-claude-codes-context)).
+ctx-receipt is for what `/context` cannot do: the total across every agent a repository carries,
+before a session starts, and on every pull request. It does not rewrite or compress anything; it
+only measures.
 
 ## Privacy and safety
 

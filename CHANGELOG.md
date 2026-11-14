@@ -2,6 +2,17 @@
 
 All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- GitHub Action (`action.yml`): run ctx-receipt in a workflow, write the receipt to the job
+  summary, optionally comment it on the pull request, and fail when the total is over a budget.
+  Outputs `total`, `grade`, and `over-budget`.
+- Live badge: a workflow measures the repository on every push to `main` and publishes a
+  shields.io endpoint file to a `badges` branch. The README shows how to add one to any repo.
+- Findings dataset: `research/` holds the scripts, the raw results, and `FINDINGS.md`, measuring
+  what popular repositories pre-load.
+- README: the "How it compares" section now lists only comparisons we could verify.
+
 ## 0.1.2 (2026-11-13)
 
 Documentation only; no change to what the tool counts or prints.
