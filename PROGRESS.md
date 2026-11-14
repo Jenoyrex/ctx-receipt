@@ -412,10 +412,14 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 
 - Upload the social preview: Settings > General > Social preview > Edit > upload
   `.github/social-preview.png` (GitHub has no API for it).
-- Launch: post the drafts in `launch/LAUNCH-KIT.md` (local, git-ignored) in the order it gives,
-  then submit to the awesome lists it names once there is traction (awesome-claude-code needs
-  at least 100 stars).
-- Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
+- Post the launch drafts in `launch/LAUNCH-KIT.md` (local, git-ignored), in the order it gives,
+  as yourself.
+- Submit the prepared awesome-list patches: `launch/patches/SUBMIT.md` says where and how for each
+  (awesome-claude-code needs at least 100 stars first).
+- Deprecate the stray placeholder version (needs your npm credentials and security key):
+  `npm deprecate ctx-receipt@0.0.0-stage "Temporary placeholder from npm staged publishing. Use the latest version."`
 - Check Codex's and Cursor's MCP deferral in the apps themselves (marked unverified).
-- For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish) so the
-  tag workflow can publish. Until then, publish by hand.
+- Optional before launch: release 0.2.0 so the action can be pinned to a tag instead of `@main`.
+- Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
+- Consider a `--mcp-timeout` option: shadcn (about 8 s) sometimes misses the fixed 10 s timeout.
+- For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish).
