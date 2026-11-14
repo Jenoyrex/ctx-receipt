@@ -1,6 +1,6 @@
 {
   "name": "ctx-receipt",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "See what your AI coding agent loads into context before you type a word. A token receipt for your rules files, skills, and MCP servers.",
   "keywords": [
     "claude-code",

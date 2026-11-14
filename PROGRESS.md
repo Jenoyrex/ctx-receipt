@@ -437,4 +437,4 @@ node dist/cli.js test/fixtures/secrets/project --home test/fixtures/secrets/home
 - Optional before launch: release 0.2.0 so the action can be pinned to a tag instead of `@main`.
 - Compare with `/context` on another project (or another model) to firm up the 1.6 factor.
 - Consider a `--mcp-timeout` option: shadcn (about 8 s) sometimes misses the fixed 10 s timeout.
-- For automated releases: add an `NPM_TOKEN` secret (a granular token allowed to publish).
+- For automated releases: set up npm trusted publishing once (npmjs.com > ctx-receipt > Settings > Trusted Publisher > GitHub Actions: Jenoyrex / ctx-receipt / release.yml). Then a pushed `v*` tag publishes; no token needed.

@@ -4,9 +4,13 @@ on:
   push:
     tags: ["v*"]
 
+# Publishes with npm trusted publishing (OIDC): no npm token is stored anywhere. One-time setup on
+# npmjs.com: package ctx-receipt > Settings > Trusted Publisher > GitHub Actions, organization
+# or user "Jenoyrex", repository "ctx-receipt", workflow "release.yml". Until that is set up, the
+# publish step fails, and publishing by hand (`npm publish`) still works.
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # trusted publishing and provenance
 
 jobs:
   publish:
@@ -16,8 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
           cache: npm
+      - name: Use an npm that supports trusted publishing (11.5.1 or later)
+        run: npm install --global npm@^11.5.1
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -35,5 +40,3 @@ jobs:
           fi
       - if: steps.published.outputs.skip != 'true'
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

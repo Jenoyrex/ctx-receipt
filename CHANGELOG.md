@@ -2,7 +2,7 @@
 
 All notable changes are listed here. Versions follow [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 0.1.3 (2026-11-14)
 
 - GitHub Action (`action.yml`): run ctx-receipt in a workflow, write the receipt to the job
   summary, optionally comment it on the pull request, and fail when the total is over a budget.

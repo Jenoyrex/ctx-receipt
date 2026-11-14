@@ -228,7 +228,7 @@ An excerpt of `--json` for the example above:
 ```json
 {
   "tool": "ctx-receipt",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "estimate": true,
   "tokenizer": "o200k_base via gpt-tokenizer",
   "contextWindow": 200000,
@@ -297,7 +297,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Jenoyrex/ctx-receipt@main
+      - uses: Jenoyrex/ctx-receipt@v0.1.3
         with:
           budget: "8000"
           comment: "true"
